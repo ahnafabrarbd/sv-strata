@@ -1,0 +1,149 @@
+:root {
+    --bg: #050300;
+    --layer-1: #fff5e6;
+    --layer-2: #ff9933;
+    --layer-3: #c1340e;
+    --text: #f5e8d8;
+    --dim: #8B6F4E;
+    --dim-2: #4a3a28;
+    --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --mono: 'Courier New', Courier, monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
+body { -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; }
+
+/* Header */
+header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 20;
+    padding: 18px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+}
+header > * { pointer-events: auto; }
+
+.logo {
+    font-size: 11px;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    color: var(--text);
+    font-weight: 700;
+}
+
+.actions { display: flex; gap: 8px; }
+.actions button, .actions label {
+    background: transparent;
+    border: 1px solid var(--dim);
+    color: var(--dim);
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 7px 12px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.actions button:hover, .actions label:hover { color: var(--text); border-color: var(--text); }
+
+/* Diagram */
+.diagram {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.diagram svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.sv-outline { fill: none; stroke-width: 2; }
+.layer { cursor: pointer; transition: filter 0.2s; }
+.layer:hover .sv-outline { stroke-width: 3; }
+
+.layer-faces .sv-outline      { stroke: var(--layer-1); filter: url(#glow-1); opacity: 0.95; }
+.layer-ideas .sv-outline      { stroke: var(--layer-2); filter: url(#glow-2); opacity: 0.85; }
+.layer-conditions .sv-outline { stroke: var(--layer-3); filter: url(#glow-3); opacity: 0.7;  }
+
+.leader { stroke-width: 1; fill: none; }
+.leader-faces      { stroke: var(--layer-1); opacity: 0.55; }
+.leader-ideas      { stroke: var(--layer-2); opacity: 0.55; }
+.leader-conditions { stroke: var(--layer-3); opacity: 0.55; }
+
+.layer-hit { fill: transparent; cursor: pointer; }
+
+/* Annotations */
+.annotation {
+    pointer-events: auto;
+    width: 320px;
+    color: var(--text);
+}
+.annotation h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    margin-bottom: 4px;
+}
+.annotation .subtitle {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 10px;
+}
+.annotation .body {
+    font-size: 12px;
+    line-height: 1.6;
+    min-height: 60px;
+    padding: 6px 8px;
+    border: 1px dashed transparent;
+    outline: none;
+    cursor: text;
+    color: var(--text);
+}
+.annotation .body:hover, .annotation .body:focus {
+    border-color: var(--dim-2);
+}
+.annotation .body[data-empty="true"] {
+    color: var(--dim);
+    font-style: italic;
+}
+.annotation .enter {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: inherit;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 2px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.layer-faces      .annotation h2,
+.layer-faces      .annotation .enter      { color: var(--layer-1); }
+.layer-ideas      .annotation h2,
+.layer-ideas      .annotation .enter      { color: var(--layer-2); }
+.layer-conditions .annotation h2,
+.layer-conditions .annotation .enter      { color: var(--layer-3); }
+
+.foot-note {
+    position: fixed;
+    right: 24px;
+    bottom: 18px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--dim-2);
+    text-transform: uppercase;
+    font-family: var(--mono);
+    pointer-events: none;
+}
