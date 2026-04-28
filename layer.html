@@ -31,6 +31,35 @@
 
     <div id="banner" class="map-banner-strata hidden"></div>
 
+    <aside id="notes-panel" class="notes-panel hidden">
+        <div class="np-header">
+            <span class="np-title-label">Node</span>
+            <button class="np-close" id="btn-np-close" title="Close">×</button>
+        </div>
+        <div class="np-body">
+            <label class="np-label">Title</label>
+            <input class="np-input" id="np-title" placeholder="Untitled" type="text">
+
+            <label class="np-label">Description</label>
+            <textarea class="np-textarea" id="np-description" placeholder="Notes, essay, ideology, quote, citation…"></textarea>
+
+            <label class="np-label">Images</label>
+            <div class="np-images" id="np-images"></div>
+            <label class="np-add-image">
+                + Add image
+                <input type="file" id="np-image-input" accept="image/*" multiple hidden>
+            </label>
+
+            <label class="np-label">Links</label>
+            <div class="np-links" id="np-links"></div>
+            <button class="np-add-link" id="btn-add-link">+ Add link</button>
+
+            <div class="np-footer">
+                <button class="np-delete" id="btn-np-delete">Delete node</button>
+            </div>
+        </div>
+    </aside>
+
     <main class="editor">
         <svg id="canvas">
             <defs>

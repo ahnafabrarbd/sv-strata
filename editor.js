@@ -182,12 +182,14 @@
         nodesLayer.querySelectorAll('.node').forEach(function (g) {
             g.classList.toggle('selected', g.getAttribute('data-id') === id);
         });
+        if (id) showPanel(id);
+        else hidePanel();
     }
 
     function deleteNode(id) {
         nodes = nodes.filter(function (n) { return n.id !== id; });
         edges = edges.filter(function (e) { return e.fromId !== id && e.toId !== id; });
-        if (selectedId === id) selectedId = null;
+        if (selectedId === id) { selectedId = null; hidePanel(); }
         if (pendingFromId === id) { pendingFromId = null; updateBanner(); }
         renderAll();
         save();
@@ -404,7 +406,8 @@
 
     // Keyboard
     document.addEventListener('keydown', function (e) {
-        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+        var t = document.activeElement && document.activeElement.tagName;
+        if (t === 'INPUT' || t === 'TEXTAREA') return;
         if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
             e.preventDefault();
             deleteNode(selectedId);
@@ -424,6 +427,200 @@
     // CSS-escape for querySelector with arbitrary IDs
     function cssEscape(s) {
         return (s || '').replace(/(["\\])/g, '\\$1');
+    }
+
+    // --- Notes panel ---
+    var panel = document.getElementById('notes-panel');
+    var npTitle = document.getElementById('np-title');
+    var npDesc = document.getElementById('np-description');
+    var npImages = document.getElementById('np-images');
+    var npLinks = document.getElementById('np-links');
+    var npImageInput = document.getElementById('np-image-input');
+
+    function showPanel(nodeId) {
+        var n = nodes.find(function (x) { return x.id === nodeId; });
+        if (!n) { hidePanel(); return; }
+        panel.classList.remove('hidden');
+        npTitle.value = n.title || '';
+        npDesc.value = n.description || '';
+        renderPanelImages(n);
+        renderPanelLinks(n);
+    }
+
+    function hidePanel() {
+        panel.classList.add('hidden');
+    }
+
+    function getSelectedNode() {
+        return selectedId ? nodes.find(function (n) { return n.id === selectedId; }) : null;
+    }
+
+    function updateSvgLabel(n) {
+        var g = nodesLayer.querySelector('[data-id="' + cssEscape(n.id) + '"]');
+        if (!g) return;
+        var t = g.querySelector('.node-label');
+        if (t) t.textContent = n.title || 'untitled';
+    }
+
+    function renderPanelImages(n) {
+        npImages.innerHTML = '';
+        var imgs = n.images || [];
+        imgs.forEach(function (img, idx) {
+            var wrap = document.createElement('div');
+            wrap.className = 'np-image-thumb';
+            var image = document.createElement('img');
+            image.src = img.data;
+            image.alt = img.name || '';
+            wrap.appendChild(image);
+
+            var rm = document.createElement('button');
+            rm.className = 'np-image-remove';
+            rm.textContent = '×';
+            rm.title = 'Remove image';
+            rm.addEventListener('click', function () {
+                n.images.splice(idx, 1);
+                save();
+                renderPanelImages(n);
+            });
+            wrap.appendChild(rm);
+
+            npImages.appendChild(wrap);
+        });
+    }
+
+    function renderPanelLinks(n) {
+        npLinks.innerHTML = '';
+        var links = n.links || [];
+        links.forEach(function (link, idx) {
+            var row = document.createElement('div');
+            row.className = 'np-link-row';
+
+            var labelInput = document.createElement('input');
+            labelInput.className = 'np-link-label';
+            labelInput.placeholder = 'Label';
+            labelInput.value = link.label || '';
+            labelInput.addEventListener('blur', function () {
+                link.label = labelInput.value;
+                save();
+            });
+
+            var urlInput = document.createElement('input');
+            urlInput.className = 'np-link-url';
+            urlInput.placeholder = 'https://…';
+            urlInput.value = link.url || '';
+            urlInput.addEventListener('blur', function () {
+                link.url = urlInput.value;
+                save();
+            });
+
+            var rm = document.createElement('button');
+            rm.className = 'np-link-remove';
+            rm.textContent = '×';
+            rm.title = 'Remove link';
+            rm.addEventListener('click', function () {
+                n.links.splice(idx, 1);
+                save();
+                renderPanelLinks(n);
+            });
+
+            row.appendChild(labelInput);
+            row.appendChild(urlInput);
+            row.appendChild(rm);
+            npLinks.appendChild(row);
+        });
+    }
+
+    // Title syncs to canvas live; commit on blur
+    npTitle.addEventListener('input', function () {
+        var n = getSelectedNode();
+        if (!n) return;
+        n.title = npTitle.value;
+        updateSvgLabel(n);
+    });
+    npTitle.addEventListener('blur', save);
+
+    // Description: debounce save while typing, commit on blur
+    var descSaveTimer = null;
+    npDesc.addEventListener('input', function () {
+        var n = getSelectedNode();
+        if (!n) return;
+        n.description = npDesc.value;
+        clearTimeout(descSaveTimer);
+        descSaveTimer = setTimeout(save, 400);
+    });
+    npDesc.addEventListener('blur', function () {
+        clearTimeout(descSaveTimer);
+        save();
+    });
+
+    npImageInput.addEventListener('change', async function (e) {
+        var n = getSelectedNode();
+        if (!n) return;
+        if (!n.images) n.images = [];
+
+        var files = Array.from(e.target.files);
+        e.target.value = '';
+
+        for (var i = 0; i < files.length; i++) {
+            try {
+                var data = await processImage(files[i]);
+                n.images.push({ name: files[i].name, data: data });
+            } catch (err) {
+                alert('Failed to process image "' + files[i].name + '": ' + err.message);
+            }
+        }
+
+        try {
+            save();
+        } catch (err) {
+            // Likely QuotaExceededError — undo the additions
+            n.images.splice(n.images.length - files.length, files.length);
+            alert('Storage quota exceeded — export your data and remove some images, or use smaller files.');
+        }
+        renderPanelImages(n);
+    });
+
+    document.getElementById('btn-add-link').addEventListener('click', function () {
+        var n = getSelectedNode();
+        if (!n) return;
+        if (!n.links) n.links = [];
+        n.links.push({ url: '', label: '' });
+        renderPanelLinks(n);
+    });
+
+    document.getElementById('btn-np-close').addEventListener('click', function () {
+        selectNode(null);
+    });
+
+    document.getElementById('btn-np-delete').addEventListener('click', function () {
+        if (!selectedId) return;
+        if (!window.confirm('Delete this node?')) return;
+        deleteNode(selectedId);
+    });
+
+    function processImage(file) {
+        return new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function () {
+                var img = new Image();
+                img.onload = function () {
+                    var maxDim = 1000;
+                    var w = img.width, h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                        else       { w = Math.round(w * maxDim / h); h = maxDim; }
+                    }
+                    var canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+                img.onerror = reject;
+                img.src = reader.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
     }
 
     // --- Init ---
