@@ -12,6 +12,7 @@
         <a href="index.html" class="logo back-link">← SV STRATA</a>
         <span class="breadcrumb" id="breadcrumb"></span>
         <div class="actions">
+            <button id="btn-connect">Connect</button>
             <button id="btn-fit">Fit</button>
             <button id="btn-help" title="Show help">?</button>
         </div>
@@ -22,8 +23,13 @@
         <div><b>Drag</b> — pan / move node</div>
         <div><b>Scroll</b> — zoom</div>
         <div><b>Delete</b> — remove selected node</div>
+        <div><b>Connect</b> — link two nodes (click each)</div>
+        <div><b>Click an edge</b> — edit its label</div>
+        <div><b>Shift-click edge</b> — delete it</div>
         <div><b>Fit</b> — recenter on the contour</div>
     </div>
+
+    <div id="banner" class="map-banner-strata hidden"></div>
 
     <main class="editor">
         <svg id="canvas">
