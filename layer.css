@@ -1,0 +1,113 @@
+/* Per-layer editor styles. Loaded after style.css. */
+
+body {
+    overflow: hidden;
+}
+
+.back-link {
+    text-decoration: none;
+    color: var(--text);
+}
+.back-link:hover { color: var(--layer-2); }
+
+.breadcrumb {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.editor {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+}
+
+#canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+    background: var(--bg);
+    user-select: none;
+}
+
+#canvas.panning { cursor: grabbing; }
+#canvas.dragging-node { cursor: grabbing; }
+
+.sv-bg {
+    fill: none;
+    stroke: var(--accent, #ff9933);
+    stroke-width: 1.5;
+    opacity: 0.18;
+    pointer-events: none;
+}
+
+/* Per-layer accent: drives node color, sv-bg color, glow color */
+body.layer-faces      { --accent: var(--layer-1); }
+body.layer-ideas      { --accent: var(--layer-2); }
+body.layer-conditions { --accent: var(--layer-3); }
+
+body.layer-faces      .breadcrumb { color: var(--layer-1); }
+body.layer-ideas      .breadcrumb { color: var(--layer-2); }
+body.layer-conditions .breadcrumb { color: var(--layer-3); }
+
+/* Nodes */
+.node { cursor: grab; }
+.node:active { cursor: grabbing; }
+
+.node-dot {
+    fill: var(--accent, #ff9933);
+    stroke: var(--accent, #ff9933);
+    stroke-width: 1.5;
+    transition: r 0.1s;
+}
+
+.node:hover .node-dot {
+    r: 7;
+}
+
+.node.selected .node-dot {
+    r: 8;
+    fill: #fff;
+    stroke: #fff;
+}
+
+.node-label {
+    fill: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    paint-order: stroke;
+    stroke: #000;
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.node.selected .node-label {
+    fill: #fff;
+    font-weight: 700;
+}
+
+/* Help card */
+.help-card {
+    position: fixed;
+    top: 70px;
+    right: 24px;
+    z-index: 30;
+    background: rgba(8, 4, 0, 0.92);
+    border: 1px solid var(--dim-2);
+    padding: 14px 18px;
+    font-size: 11px;
+    line-height: 1.9;
+    color: var(--text);
+    letter-spacing: 0.5px;
+    max-width: 260px;
+}
+.help-card b {
+    color: var(--accent, #ff9933);
+    font-weight: 700;
+    margin-right: 6px;
+}
+.hidden { display: none; }

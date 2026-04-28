@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SV STRATA</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="layer.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo back-link">← SV STRATA</a>
+        <span class="breadcrumb" id="breadcrumb"></span>
+        <div class="actions">
+            <button id="btn-fit">Fit</button>
+            <button id="btn-help" title="Show help">?</button>
+        </div>
+    </header>
+
+    <div id="help-card" class="help-card hidden">
+        <div><b>Click empty space</b> — add a node</div>
+        <div><b>Drag</b> — pan / move node</div>
+        <div><b>Scroll</b> — zoom</div>
+        <div><b>Delete</b> — remove selected node</div>
+        <div><b>Fit</b> — recenter on the contour</div>
+    </div>
+
+    <main class="editor">
+        <svg id="canvas">
+            <defs>
+                <path id="sv-shape-bg" d=""/>
+            </defs>
+            <g id="viewport">
+                <g id="bg-shape" class="sv-bg-group">
+                    <use href="#sv-shape-bg" class="sv-bg"/>
+                </g>
+                <g id="edges-layer"></g>
+                <g id="nodes-layer"></g>
+            </g>
+        </svg>
+    </main>
+
+    <script src="shape.js"></script>
+    <script src="editor.js"></script>
+</body>
+</html>
