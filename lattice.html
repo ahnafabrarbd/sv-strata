@@ -14,8 +14,9 @@
         <span class="breadcrumb">LATTICE</span>
         <div class="actions">
             <button id="btn-add-plane" title="Add a new plane">+ Plane</button>
+            <button id="btn-add-znode" title="Add a free node on the Z-axis (between planes)">+ Z-Node</button>
             <button id="btn-import" title="Import a 2D stratum's nodes onto its plane">Import 2D</button>
-            <button id="btn-connect" title="Connect two nodes (any plane)">Connect</button>
+            <button id="btn-connect" title="Connect any two nodes — same plane or across planes">Connect ⌁</button>
             <button id="btn-focus" title="Top-down view of the selected plane">Focus</button>
             <button id="btn-orbit" title="Return to 3D orbit">Orbit</button>
             <button id="btn-help" title="Show help">?</button>
@@ -26,10 +27,13 @@
         <div><b>Drag empty</b> — orbit the lattice</div>
         <div><b>Right-drag</b> — pan</div>
         <div><b>Scroll</b> — zoom</div>
-        <div><b>Click plane</b> — add a node</div>
+        <div><b>Click plane</b> — add a node on it</div>
+        <div><b>+ Z-Node</b> — add a free node on the Z-axis (between planes)</div>
         <div><b>Click node</b> — select / open notes</div>
-        <div><b>Drag node</b> — slide it across its plane</div>
-        <div><b>Connect</b> — pick two nodes (same or different planes)</div>
+        <div><b>Drag node</b> — slide it across its plane (free nodes: same height)</div>
+        <div><b>Connect ⌁</b> — pick two nodes; cross-plane edges render as dashed white lines</div>
+        <div><b>Click edge</b> — edit its label (Obsidian-Canvas style)</div>
+        <div><b>Shift-click edge</b> — delete the connection</div>
         <div><b>Focus</b> — top-down 2D-style view of the selected plane</div>
         <div><b>Orbit</b> — return to free 3D view</div>
         <div><b>Delete</b> — remove selected node</div>
@@ -58,6 +62,11 @@
 
             <label class="np-label">Plane</label>
             <select class="np-input np-select" id="np-plane"></select>
+
+            <div id="np-y-row" class="np-y-row hidden">
+                <label class="np-label">Height (Y on Z-axis)</label>
+                <input class="np-input" id="np-y" type="number" step="20">
+            </div>
 
             <label class="np-label">Linked stratum</label>
             <div id="np-source" class="np-source"></div>

@@ -168,6 +168,20 @@ body.lattice { --accent: var(--layer-2); overflow: hidden; }
     cursor: pointer;
 }
 
+.np-y-row {
+    margin-top: 0;
+}
+.np-y-row .np-label { margin-top: 12px; }
+
+/* Connect-mode pulse on the toolbar button */
+.actions button#btn-connect.on {
+    animation: connect-pulse 1.6s ease-in-out infinite;
+}
+@keyframes connect-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 153, 51, 0.45); }
+    50%      { box-shadow: 0 0 0 6px rgba(255, 153, 51, 0); }
+}
+
 /* Toolbar lattice link */
 .lattice-link {
     color: var(--layer-2);
