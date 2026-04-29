@@ -63,13 +63,19 @@ header > * { pointer-events: auto; }
     display: block;
 }
 
-.sv-outline { fill: none; stroke-width: 2; }
+.sv-outline {
+    fill: none;
+    stroke-width: 3.2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
 .layer { cursor: pointer; transition: filter 0.2s; }
-.layer:hover .sv-outline { stroke-width: 3; }
+.layer:hover .sv-outline { stroke-width: 4.2; }
 
 .layer-faces .sv-outline      { stroke: var(--layer-1); filter: url(#glow-1); opacity: 0.95; }
-.layer-ideas .sv-outline      { stroke: var(--layer-2); filter: url(#glow-2); opacity: 0.85; }
-.layer-conditions .sv-outline { stroke: var(--layer-3); filter: url(#glow-3); opacity: 0.7;  }
+.layer-ideas .sv-outline      { stroke: var(--layer-2); filter: url(#glow-2); opacity: 0.9; }
+.layer-conditions .sv-outline { stroke: var(--layer-3); filter: url(#glow-3); opacity: 0.82; }
 
 .leader { stroke-width: 1; fill: none; }
 .leader-faces      { stroke: var(--layer-1); opacity: 0.55; }

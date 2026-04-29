@@ -20,26 +20,60 @@
         <svg viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid meet">
             <defs>
                 <path id="sv-shape" d="" />
-                <filter id="glow-1" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="1.5"/>
+                <!--
+                  Atmospheric glow: a wide low-opacity haze layered over a
+                  tighter mid-glow, with the crisp source on top so the
+                  contour stays sharp. Reads as light bleeding into the
+                  background instead of a flat halo.
+                -->
+                <filter id="glow-1" x="-60%" y="-60%" width="220%" height="220%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b1"/>
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b2"/>
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="22" result="b3"/>
+                    <feComponentTransfer in="b3" result="b3dim">
+                        <feFuncA type="linear" slope="0.45"/>
+                    </feComponentTransfer>
+                    <feComponentTransfer in="b2" result="b2dim">
+                        <feFuncA type="linear" slope="0.7"/>
+                    </feComponentTransfer>
                     <feMerge>
-                        <feMergeNode/>
+                        <feMergeNode in="b3dim"/>
+                        <feMergeNode in="b2dim"/>
+                        <feMergeNode in="b1"/>
                         <feMergeNode in="SourceGraphic"/>
                     </feMerge>
                 </filter>
-                <filter id="glow-2" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="4"/>
+                <filter id="glow-2" x="-60%" y="-60%" width="220%" height="220%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b1"/>
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="b2"/>
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="28" result="b3"/>
+                    <feComponentTransfer in="b3" result="b3dim">
+                        <feFuncA type="linear" slope="0.5"/>
+                    </feComponentTransfer>
+                    <feComponentTransfer in="b2" result="b2dim">
+                        <feFuncA type="linear" slope="0.75"/>
+                    </feComponentTransfer>
                     <feMerge>
-                        <feMergeNode/>
-                        <feMergeNode/>
+                        <feMergeNode in="b3dim"/>
+                        <feMergeNode in="b2dim"/>
+                        <feMergeNode in="b1"/>
                         <feMergeNode in="SourceGraphic"/>
                     </feMerge>
                 </filter>
-                <filter id="glow-3" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="9"/>
+                <filter id="glow-3" x="-60%" y="-60%" width="220%" height="220%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b1"/>
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="b2"/>
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="36" result="b3"/>
+                    <feComponentTransfer in="b3" result="b3dim">
+                        <feFuncA type="linear" slope="0.55"/>
+                    </feComponentTransfer>
+                    <feComponentTransfer in="b2" result="b2dim">
+                        <feFuncA type="linear" slope="0.8"/>
+                    </feComponentTransfer>
                     <feMerge>
-                        <feMergeNode/>
-                        <feMergeNode/>
+                        <feMergeNode in="b3dim"/>
+                        <feMergeNode in="b2dim"/>
+                        <feMergeNode in="b1"/>
                         <feMergeNode in="SourceGraphic"/>
                     </feMerge>
                 </filter>
