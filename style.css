@@ -87,29 +87,29 @@ header > * { pointer-events: auto; }
 /* Annotations */
 .annotation {
     pointer-events: auto;
-    width: 320px;
+    width: 230px;
     color: var(--text);
 }
 .annotation h2 {
-    font-size: 22px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.2px;
     text-decoration: underline;
-    text-underline-offset: 4px;
-    margin-bottom: 4px;
+    text-underline-offset: 3px;
+    margin-bottom: 3px;
 }
 .annotation .subtitle {
-    font-size: 9px;
-    letter-spacing: 3px;
+    font-size: 8px;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
     color: var(--dim);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 .annotation .body {
-    font-size: 12px;
-    line-height: 1.6;
-    min-height: 60px;
-    padding: 6px 8px;
+    font-size: 10.5px;
+    line-height: 1.55;
+    min-height: 48px;
+    padding: 5px 6px;
     border: 1px dashed transparent;
     outline: none;
     cursor: text;
@@ -124,9 +124,9 @@ header > * { pointer-events: auto; }
 }
 .annotation .enter {
     display: inline-block;
-    margin-top: 12px;
-    font-size: 10px;
-    letter-spacing: 3px;
+    margin-top: 9px;
+    font-size: 9px;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
     color: inherit;
     border-bottom: 1px solid currentColor;
