@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SV STRATA — Lattice</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="layer.css">
+    <link rel="stylesheet" href="lattice.css">
+</head>
+<body class="lattice">
+    <header>
+        <a href="index.html" class="logo back-link">← SV STRATA</a>
+        <span class="breadcrumb">LATTICE</span>
+        <div class="actions">
+            <button id="btn-add-plane" title="Add a new plane">+ Plane</button>
+            <button id="btn-import" title="Import a 2D stratum's nodes onto its plane">Import 2D</button>
+            <button id="btn-connect" title="Connect two nodes (any plane)">Connect</button>
+            <button id="btn-focus" title="Top-down view of the selected plane">Focus</button>
+            <button id="btn-orbit" title="Return to 3D orbit">Orbit</button>
+            <button id="btn-help" title="Show help">?</button>
+        </div>
+    </header>
+
+    <div id="help-card" class="help-card hidden">
+        <div><b>Drag empty</b> — orbit the lattice</div>
+        <div><b>Right-drag</b> — pan</div>
+        <div><b>Scroll</b> — zoom</div>
+        <div><b>Click plane</b> — add a node</div>
+        <div><b>Click node</b> — select / open notes</div>
+        <div><b>Drag node</b> — slide it across its plane</div>
+        <div><b>Connect</b> — pick two nodes (same or different planes)</div>
+        <div><b>Focus</b> — top-down 2D-style view of the selected plane</div>
+        <div><b>Orbit</b> — return to free 3D view</div>
+        <div><b>Delete</b> — remove selected node</div>
+        <div><b>Import 2D</b> — pull a stratum's notes onto its linked plane</div>
+    </div>
+
+    <div id="banner" class="map-banner-strata hidden"></div>
+
+    <aside id="planes-panel" class="planes-panel">
+        <div class="pp-header">PLANES · DEPTH</div>
+        <div id="planes-list" class="pp-list"></div>
+        <div class="pp-hint">Edit y to re-stack the lattice.</div>
+    </aside>
+
+    <aside id="notes-panel" class="notes-panel hidden">
+        <div class="np-header">
+            <span class="np-title-label">Node</span>
+            <button class="np-close" id="btn-np-close" title="Close">×</button>
+        </div>
+        <div class="np-body">
+            <label class="np-label">Title</label>
+            <input class="np-input" id="np-title" placeholder="Untitled" type="text">
+
+            <label class="np-label">Description</label>
+            <textarea class="np-textarea" id="np-description" placeholder="Notes, essay, ideology, quote, citation…"></textarea>
+
+            <label class="np-label">Plane</label>
+            <select class="np-input np-select" id="np-plane"></select>
+
+            <label class="np-label">Linked stratum</label>
+            <div id="np-source" class="np-source"></div>
+
+            <label class="np-label">Connections</label>
+            <div id="np-edges" class="np-edges"></div>
+
+            <label class="np-label">Links</label>
+            <div class="np-links" id="np-links"></div>
+            <button class="np-add-link" id="btn-add-link">+ Add link</button>
+
+            <div class="np-footer">
+                <button class="np-delete" id="btn-np-delete">Delete node</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="lattice-canvas">
+        <div id="canvas3d"></div>
+    </main>
+
+    <script src="shape.js"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
+    <script type="module" src="lattice.js"></script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+/* Lattice page — 3D node graph styles. */
+
+body.lattice { --accent: var(--layer-2); overflow: hidden; }
+
+.lattice-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+}
+#canvas3d {
+    width: 100%;
+    height: 100%;
+}
+#canvas3d canvas {
+    display: block;
+    cursor: grab;
+}
+#canvas3d canvas:active {
+    cursor: grabbing;
+}
+
+/* Planes panel (left) */
+.planes-panel {
+    position: fixed;
+    top: 70px;
+    left: 24px;
+    width: 230px;
+    z-index: 10;
+    background: rgba(8, 4, 0, 0.88);
+    border: 1px solid var(--dim-2);
+    padding: 14px 16px 16px;
+    color: var(--text);
+    font-family: var(--font);
+}
+.pp-header {
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 12px;
+}
+.pp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.pp-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+}
+.pp-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px currentColor;
+}
+.pp-label {
+    flex: 1;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.pp-y {
+    width: 64px;
+    background: transparent;
+    border: 1px solid var(--dim-2);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 5px;
+    outline: none;
+    flex-shrink: 0;
+}
+.pp-y:focus { border-color: var(--accent); }
+.pp-remove {
+    background: transparent;
+    border: 1px solid var(--dim-2);
+    color: var(--dim);
+    width: 22px;
+    flex-shrink: 0;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    padding: 2px 0;
+}
+.pp-remove:hover { color: #c1340e; border-color: #c1340e; }
+.pp-hint {
+    margin-top: 12px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--dim-2);
+    font-family: var(--mono);
+}
+
+/* Source link / connections in side panel */
+.np-source {
+    font-size: 11px;
+    color: var(--dim);
+    padding: 4px 0;
+}
+.np-source-link {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+}
+.np-source-link:hover { color: var(--text); }
+
+.np-edges {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+.np-edge-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    padding: 4px 6px;
+    border: 1px solid var(--dim-2);
+    background: rgba(255, 153, 51, 0.04);
+}
+.np-edge-target {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text);
+}
+.np-edge-plane {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--dim);
+}
+.np-edge-remove {
+    background: transparent;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 4px;
+}
+.np-edge-remove:hover { color: #c1340e; }
+.np-edges-empty {
+    font-size: 10px;
+    color: var(--dim-2);
+    font-style: italic;
+}
+
+.np-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--dim) 50%),
+                      linear-gradient(135deg, var(--dim) 50%, transparent 50%);
+    background-position: calc(100% - 14px) center, calc(100% - 9px) center;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 24px;
+    cursor: pointer;
+}
+
+/* Toolbar lattice link */
+.lattice-link {
+    color: var(--layer-2);
+    border-color: var(--layer-2) !important;
+}
+.lattice-link:hover { color: var(--text) !important; border-color: var(--text) !important; }

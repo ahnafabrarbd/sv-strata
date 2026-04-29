@@ -37,7 +37,7 @@ header > * { pointer-events: auto; }
 }
 
 .actions { display: flex; gap: 8px; }
-.actions button, .actions label {
+.actions button, .actions label, .actions a {
     background: transparent;
     border: 1px solid var(--dim);
     color: var(--dim);
@@ -47,9 +47,20 @@ header > * { pointer-events: auto; }
     padding: 7px 12px;
     text-transform: uppercase;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
     transition: color 0.15s, border-color 0.15s;
 }
-.actions button:hover, .actions label:hover { color: var(--text); border-color: var(--text); }
+.actions button:hover, .actions label:hover, .actions a:hover { color: var(--text); border-color: var(--text); }
+.actions a#link-lattice {
+    color: var(--layer-2);
+    border-color: var(--layer-2);
+}
+.actions a#link-lattice:hover {
+    color: var(--text);
+    border-color: var(--text);
+}
 
 /* Diagram */
 .diagram {
