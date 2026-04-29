@@ -50,6 +50,12 @@ body.lattice { --accent: var(--layer-2); overflow: hidden; }
     gap: 10px;
     font-size: 11px;
 }
+.pp-row-z {
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--dim-2);
+    opacity: 0.85;
+}
 .pp-dot {
     width: 9px;
     height: 9px;
@@ -140,6 +146,22 @@ body.lattice { --accent: var(--layer-2); overflow: hidden; }
     text-transform: uppercase;
     color: var(--dim);
 }
+.np-edge-label-btn {
+    background: transparent;
+    border: 1px dashed var(--dim-2);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 3px 7px;
+    cursor: pointer;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.np-edge-label-btn:hover { color: var(--accent); border-color: var(--accent); }
+
 .np-edge-remove {
     background: transparent;
     border: none;
