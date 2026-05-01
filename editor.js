@@ -378,12 +378,19 @@
     }
 
     function selectNode(id) {
+        // Selection-only — highlights the node but does NOT open the
+        // notes panel. The panel is opened explicitly via openPanel()
+        // (double-click on a node, or the Notes toolbar button).
         selectedId = id;
         nodesLayer.querySelectorAll('.node').forEach(function (g) {
             g.classList.toggle('selected', g.getAttribute('data-id') === id);
         });
-        if (id) showPanel(id);
-        else hidePanel();
+    }
+
+    function openPanel(id) {
+        if (!id) { hidePanel(); return; }
+        selectNode(id);
+        showPanel(id);
     }
 
     function deleteNode(id) {
@@ -590,6 +597,8 @@
             }
 
             if (nid) {
+                // Single click selects only — the notes panel opens via
+                // double-click or the Notes toolbar button.
                 selectNode(nid);
             } else if (eid) {
                 if (e.shiftKey) {
@@ -608,6 +617,15 @@
             // pull rather than hard fix.
             if (d.type === 'node') reheat(0.35);
         }
+    });
+
+    // Double-click on a node opens its notes panel. Single click only
+    // selects (above), so the canvas isn't constantly being colonised by
+    // a 440-px panel every time you tap a node.
+    svg.addEventListener('dblclick', function (e) {
+        var nid = nodeIdFromTarget(e.target);
+        if (!nid) return;
+        openPanel(nid);
     });
 
     // Wheel zoom
@@ -632,7 +650,9 @@
             e.preventDefault();
             deleteNode(selectedId);
         } else if (e.key === 'Escape') {
-            selectNode(null);
+            // Esc cascades: close the panel first, then deselect.
+            if (!panel.classList.contains('hidden')) hidePanel();
+            else selectNode(null);
         }
     });
 
@@ -641,6 +661,22 @@
     document.getElementById('btn-connect').addEventListener('click', toggleConnectMode);
     var layoutBtn = document.getElementById('btn-layout');
     if (layoutBtn) layoutBtn.addEventListener('click', function () { reheat(1.0); });
+
+    // Notes toggle: open the panel for the currently selected node, or
+    // close it if it's already open. If nothing's selected, do nothing.
+    var notesBtn = document.getElementById('btn-notes');
+    if (notesBtn) {
+        notesBtn.addEventListener('click', function () {
+            var isOpen = !panel.classList.contains('hidden');
+            if (isOpen) {
+                hidePanel();
+                notesBtn.classList.remove('on');
+            } else if (selectedId) {
+                openPanel(selectedId);
+                notesBtn.classList.add('on');
+            }
+        });
+    }
     var helpCard = document.getElementById('help-card');
     document.getElementById('btn-help').addEventListener('click', function () {
         helpCard.classList.toggle('hidden');
@@ -658,7 +694,6 @@
     var npGenealogy = document.getElementById('np-genealogy');
     var npHistory = document.getElementById('np-history');
     var npDetail = document.getElementById('np-detail');
-    var npSpecial = document.getElementById('np-special');
     var npImages = document.getElementById('np-images');
     var npLinks = document.getElementById('np-links');
     var npComments = document.getElementById('np-comments');
@@ -673,7 +708,6 @@
         if (n.genealogy == null) n.genealogy = '';
         if (n.history   == null) n.history   = '';
         if (n.detail    == null) n.detail    = n.description != null ? n.description : '';
-        if (n.special   == null) n.special   = '';
         if (!Array.isArray(n.images))   n.images   = [];
         if (!Array.isArray(n.links))    n.links    = [];
         if (!Array.isArray(n.comments)) n.comments = [];
@@ -683,6 +717,7 @@
         }
         if (!n.createdAt) n.createdAt = new Date().toISOString();
         if (n.description != null) delete n.description;
+        if (n.special != null) delete n.special;     // legacy field — drop it
         return n;
     }
 
@@ -704,11 +739,12 @@
         if (!n) { hidePanel(); return; }
         ensureWikiFields(n);
         panel.classList.remove('hidden');
+        var nb = document.getElementById('btn-notes');
+        if (nb) nb.classList.add('on');
         npTitle.value      = n.title     || '';
         npGenealogy.value  = n.genealogy || '';
         npHistory.value    = n.history   || '';
         npDetail.value     = n.detail    || '';
-        npSpecial.value    = n.special   || '';
         renderByline(n);
         renderPanelImages(n);
         renderPanelLinks(n);
@@ -717,6 +753,8 @@
 
     function hidePanel() {
         panel.classList.add('hidden');
+        var nb = document.getElementById('btn-notes');
+        if (nb) nb.classList.remove('on');
     }
 
     function getSelectedNode() {
@@ -849,7 +887,6 @@
     bindWikiField(npGenealogy, 'genealogy');
     bindWikiField(npHistory,   'history');
     bindWikiField(npDetail,    'detail');
-    bindWikiField(npSpecial,   'special');
 
     npImageInput.addEventListener('change', async function (e) {
         var n = getSelectedNode();
@@ -961,7 +998,7 @@
     });
 
     document.getElementById('btn-np-close').addEventListener('click', function () {
-        selectNode(null);
+        hidePanel();
     });
 
     document.getElementById('btn-np-delete').addEventListener('click', function () {

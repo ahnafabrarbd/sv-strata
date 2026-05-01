@@ -208,6 +208,9 @@ body.layer-factory  .breadcrumb { color: var(--layer-3); }
     color: var(--text);
     font-family: var(--font);
 }
+/* Higher-specificity hide — beats the .notes-panel rule above so the
+   close × actually takes the panel off screen. */
+.notes-panel.hidden { display: none; }
 
 .np-header {
     display: flex;

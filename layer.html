@@ -15,18 +15,22 @@
             <button id="btn-connect">Connect</button>
             <button id="btn-layout" title="Re-run force-directed layout">Layout</button>
             <button id="btn-fit">Fit</button>
+            <button id="btn-notes" title="Open / close notes for the selected node">Notes</button>
             <button id="btn-help" title="Show help">?</button>
         </div>
     </header>
 
     <div id="help-card" class="help-card hidden">
-        <div><b>Click empty space</b> — add a node</div>
-        <div><b>Drag</b> — pan / move node</div>
+        <div><b>Click empty</b> — add a node</div>
+        <div><b>Click node</b> — select it</div>
+        <div><b>Double-click node</b> — open notes</div>
+        <div><b>Drag</b> — pan / move a node</div>
         <div><b>Scroll</b> — zoom</div>
         <div><b>Delete</b> — remove selected node</div>
         <div><b>Connect</b> — link two nodes (click each)</div>
-        <div><b>Click an edge</b> — edit its label</div>
-        <div><b>Shift-click edge</b> — delete it</div>
+        <div><b>Click edge</b> — edit its label</div>
+        <div><b>Shift-click edge</b> — delete edge</div>
+        <div><b>Notes</b> — toggle the notes panel</div>
         <div><b>Layout</b> — re-run the force-directed graph</div>
         <div><b>Fit</b> — recenter the view</div>
     </div>
@@ -56,9 +60,6 @@
 
             <label class="np-label">Detail</label>
             <textarea class="np-textarea" id="np-detail" placeholder="Notes, essay, ideology, quote, citation…"></textarea>
-
-            <label class="np-label">Special details</label>
-            <textarea class="np-textarea" id="np-special" placeholder="Anomalies, footnotes, anything that doesn't fit above…"></textarea>
 
             <label class="np-label">Pictures</label>
             <div class="np-images" id="np-images"></div>
