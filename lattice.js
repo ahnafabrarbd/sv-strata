@@ -9,7 +9,6 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { buildHologram, HOLO_COLORS } from './holograms.js';
 
 (function () {
 'use strict';
@@ -28,9 +27,9 @@ const PLANE_PALETTE = ['#a3d977', '#7dd3fc', '#c084fc', '#f472b6', '#fde047', '#
 function defaultState() {
     return {
         planes: [
-            { id: 'plane_faces',    label: 'FACES',    y:  PLANE_GAP, color: '#c8ffd4', linkedLayer: 'faces' },
-            { id: 'plane_ideology', label: 'IDEOLOGY', y:  0,         color: '#44ff8c', linkedLayer: 'ideology' },
-            { id: 'plane_factory',  label: 'FACTORY',  y: -PLANE_GAP, color: '#009947', linkedLayer: 'factory' }
+            { id: 'plane_faces',    label: 'FACES',    y:  PLANE_GAP, color: '#8fd9a6', linkedLayer: 'faces' },
+            { id: 'plane_ideology', label: 'IDEOLOGY', y:  0,         color: '#2dcc66', linkedLayer: 'ideology' },
+            { id: 'plane_factory',  label: 'FACTORY',  y: -PLANE_GAP, color: '#0f5d36', linkedLayer: 'factory' }
         ],
         nodes: [],
         edges: []
@@ -74,38 +73,9 @@ function nodeAbsoluteY(n) {
 function nodeColor(n) {
     if (isFreeNode(n)) return FREE_NODE_COLOR;
     const plane = state.planes.find(p => p.id === n.planeId);
-    return plane ? plane.color : '#44ff8c';
+    return plane ? plane.color : '#2dcc66';
 }
 
-// ---------- per-layer hologram ----------
-// Each plane carries the holographic icon for its linked layer (the same
-// mask / network / factory geometries used on the index page). Built once
-// per kind and cloned into each plane group so we never duplicate buffers.
-const HOLO_KIND_BY_LAYER = { faces: 'mask', ideology: 'network', factory: 'factory' };
-const HOLO_SCALE = 90;     // world-units per hologram unit
-const HOLO_LIFT  = 24;     // hover the icon slightly above the plane
-
-function holoForPlane(plane) {
-    const kind = HOLO_KIND_BY_LAYER[plane.linkedLayer];
-    if (!kind) return null;
-    const color = HOLO_COLORS[plane.linkedLayer] ?? new THREE.Color(plane.color).getHex();
-    const group = buildHologram(kind, color);
-    group.scale.setScalar(HOLO_SCALE);
-    group.position.y = HOLO_LIFT;
-    // Make the in-plane hologram very faint so it sits behind nodes.
-    group.traverse(o => {
-        if (o.material) {
-            const apply = (m) => {
-                m.transparent = true;
-                m.opacity = (m.opacity ?? 1) * 0.22;
-                m.depthWrite = false;
-            };
-            if (Array.isArray(o.material)) o.material.forEach(apply);
-            else apply(o.material);
-        }
-    });
-    return group;
-}
 
 // ---------- three.js ----------
 const container = document.getElementById('canvas3d');
@@ -243,8 +213,6 @@ function buildPlane(p) {
     grid.material.opacity = 0.07;
     group.add(grid);
 
-    const holo = holoForPlane(p);
-    if (holo) group.add(holo);
 
     const label = makeTextSprite(p.label, p.color, 60);
     label.position.set(-PLANE_W/2 - 30, 14, -PLANE_H/2 + 10);

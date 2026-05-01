@@ -1,9 +1,9 @@
 :root {
     --bg: #03100a;
-    --layer-1: #c8ffd4;   /* faces — palest green */
-    --layer-2: #44ff8c;   /* ideology — neon green */
-    --layer-3: #009947;   /* factory — deep emerald */
-    --text: #e8ffe8;
+    --layer-1: #8fd9a6;   /* faces — muted sage */
+    --layer-2: #2dcc66;   /* ideology — mid green (toned down from neon) */
+    --layer-3: #0f5d36;   /* factory — deep forest */
+    --text: #cfe6d4;
     --dim: #4d8060;
     --dim-2: #1c3a25;
     --danger: #ff5577;
@@ -70,16 +70,18 @@ header > * { pointer-events: auto; }
     height: 100%;
 }
 
-/* Holographic icon trio — landing page */
+/* Holographic icon trio — landing page. Sized small/compact so the
+   trio doesn't dominate the screen; the metaphor is a clean monospace
+   index card per stratum, not a hero canvas. */
 .holo-trio {
     position: absolute;
     inset: 0;
-    padding: 80px 40px 64px;
+    padding: 96px 40px 72px;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 24px;
-    align-items: stretch;
-    justify-items: stretch;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    align-items: center;
+    justify-items: center;
     pointer-events: none;
 }
 .holo-cell {
@@ -88,20 +90,19 @@ header > * { pointer-events: auto; }
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 12px 18px 18px;
+    padding: 18px 14px 16px;
     pointer-events: auto;
     cursor: pointer;
     border: 1px solid transparent;
     transition: border-color 0.2s, background 0.2s;
+    width: min(280px, 100%);
 }
 .holo-cell:hover {
     border-color: var(--dim-2);
-    background: rgba(255, 255, 255, 0.012);
 }
 .holo-canvas-wrap {
-    width: 100%;
-    flex: 1 1 auto;
-    min-height: 240px;
+    width: 200px;
+    height: 200px;
     position: relative;
     cursor: grab;
 }
