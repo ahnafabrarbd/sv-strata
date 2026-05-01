@@ -9,7 +9,7 @@ window.SV_LAYERS = [
         title: 'FACES',
         subtitle: 'Surface stratum',
         hologram: 'mask',
-        placeholder: 'The front-facing figures — founders, personalities, the public face of capital. Click to edit this note.'
+        placeholder: 'The brand and image of the enterprise. This is the frontend of the game — all the rhetoric, sign-value, and "events" of the surface of the game.'
     },
     {
         id: 'ideology',
