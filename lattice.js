@@ -85,8 +85,8 @@ function nodeColor(n) {
 // ---------- three.js ----------
 const container = document.getElementById('canvas3d');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x03100a);
-scene.fog = new THREE.Fog(0x03100a, 1100, 3200);
+scene.background = new THREE.Color(0x111114);
+scene.fog = new THREE.Fog(0x111114, 1100, 3200);
 
 const camera = new THREE.PerspectiveCamera(
     42,

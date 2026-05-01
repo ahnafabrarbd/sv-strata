@@ -163,7 +163,7 @@ body.layer-factory  .breadcrumb { color: var(--layer-3); }
     left: 50%;
     transform: translateX(-50%);
     z-index: 25;
-    background: rgba(8, 4, 0, 0.92);
+    background: rgba(20, 20, 24, 0.92);
     border: 1px solid var(--accent, #2dcc66);
     color: var(--accent, #2dcc66);
     font-family: var(--font);
@@ -179,7 +179,7 @@ body.layer-factory  .breadcrumb { color: var(--layer-3); }
     top: 70px;
     right: 24px;
     z-index: 30;
-    background: rgba(8, 4, 0, 0.92);
+    background: rgba(20, 20, 24, 0.92);
     border: 1px solid var(--dim-2);
     padding: 14px 18px;
     font-size: 11px;
@@ -200,7 +200,7 @@ body.layer-factory  .breadcrumb { color: var(--layer-3); }
     position: fixed;
     top: 0; right: 0; bottom: 0;
     width: 440px;
-    background: rgba(3, 16, 10, 0.97);
+    background: rgba(20, 20, 24, 0.97);
     border-left: 1px solid var(--dim-2);
     z-index: 40;
     display: flex;
