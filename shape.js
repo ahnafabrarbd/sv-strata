@@ -23,6 +23,6 @@ window.SV_LAYERS = [
         title: 'FACTORY',
         subtitle: 'Mariana stratum',
         hologram: 'factory',
-        placeholder: 'The material conditions and source code — capital flows, supply chains, infrastructure, labour — that let the upper strata exist. Click to edit this note.'
+        placeholder: 'The premade and invisible laws, ethos, conditions both spiritual and material, and forces that make both the front end and the backend possible.'
     }
 ];
