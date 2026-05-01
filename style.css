@@ -63,6 +63,35 @@ header > * { pointer-events: auto; }
     border-color: var(--text);
 }
 
+/* User pill + sign-out (injected by auth.js into every gated page). */
+.user-pill {
+    background: transparent;
+    border: 1px solid var(--dim-2);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    padding: 7px 10px;
+    text-transform: lowercase;
+    margin-right: 4px;
+}
+.user-signout {
+    background: transparent;
+    border: 1px solid var(--dim);
+    color: var(--dim);
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 7px 12px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.user-signout:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
 /* Diagram */
 .diagram {
     position: relative;
