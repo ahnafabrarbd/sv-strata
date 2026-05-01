@@ -16,7 +16,7 @@ window.SV_LAYERS = [
         title: 'IDEOLOGY',
         subtitle: 'Middle stratum',
         hologram: 'network',
-        placeholder: 'The doctrines, axioms, and accepted principles — the lattice of ideas that shapes what the surface believes. Click to edit this note.'
+        placeholder: 'The network of ideas, frameworks and beliefs that make up the consciousness of Silicon Valley.'
     },
     {
         id: 'factory',
