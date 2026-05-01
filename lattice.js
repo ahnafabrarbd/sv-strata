@@ -32,7 +32,8 @@ function defaultState() {
             { id: 'plane_factory',  label: 'FACTORY',  y: -PLANE_GAP, color: '#0f5d36', linkedLayer: 'factory' }
         ],
         nodes: [],
-        edges: []
+        edges: [],
+        bounds: { half: 720 }
     };
 }
 
@@ -43,6 +44,10 @@ function loadState() {
         const s = JSON.parse(raw);
         if (!Array.isArray(s.planes) || !Array.isArray(s.nodes) || !Array.isArray(s.edges)) {
             return defaultState();
+        }
+        // Backfill bounds for legacy data.
+        if (!s.bounds || typeof s.bounds.half !== 'number') {
+            s.bounds = { half: 720 };
         }
         return s;
     } catch (e) {
@@ -241,6 +246,57 @@ function disposePlane(planeId) {
 function buildPlanes() {
     Array.from(planeGroups.keys()).forEach(disposePlane);
     state.planes.forEach(buildPlane);
+}
+
+// ---------- bounding box (skeletal lattice barrier) ----------
+// A dotted, transparent wireframe cube around the whole 3D scene. Nodes
+// can never travel outside it — drag and physics both clamp to its
+// half-extent. Resized uniformly via the slider in the planes panel.
+let boundsBox = null;
+function buildBoundsBox() {
+    if (boundsBox) {
+        scene.remove(boundsBox);
+        boundsBox.geometry.dispose();
+        boundsBox.material.dispose();
+        boundsBox = null;
+    }
+    const half = state.bounds.half;
+    const cube = new THREE.BoxGeometry(2 * half, 2 * half, 2 * half);
+    const edges = new THREE.EdgesGeometry(cube);
+    cube.dispose();
+    const mat = new THREE.LineDashedMaterial({
+        color: 0x44ff8c,
+        transparent: true,
+        opacity: 0.45,
+        dashSize: 14,
+        gapSize: 10,
+        depthWrite: false
+    });
+    boundsBox = new THREE.LineSegments(edges, mat);
+    boundsBox.computeLineDistances();
+    boundsBox.userData = { type: 'bounds' };
+    boundsBox.renderOrder = -1;     // sit behind other geometry
+    scene.add(boundsBox);
+}
+
+function clampNodeToBounds(n) {
+    const half = state.bounds.half;
+    if (n.x >  half) n.x =  half;
+    if (n.x < -half) n.x = -half;
+    if (n.z >  half) n.z =  half;
+    if (n.z < -half) n.z = -half;
+    if (isFreeNode(n)) {
+        let y = (typeof n.y === 'number') ? n.y : 0;
+        if (y >  half) y =  half;
+        if (y < -half) y = -half;
+        n.y = y;
+    }
+}
+
+function clampAllNodes() {
+    state.nodes.forEach(clampNodeToBounds);
+    state.nodes.forEach(setNodeMeshPosition);
+    state.edges.forEach(updateEdgeGeometry);
 }
 
 // ---------- node builders ----------
@@ -546,6 +602,19 @@ function simStep() {
             n.vy = 0;
         }
 
+        // Hard cube barrier — clamp position and zero out velocity on
+        // any axis that's hitting the wall, so the node sticks rather
+        // than oscillating against the boundary.
+        const half = state.bounds.half;
+        if (n.x >  half) { n.x =  half; n.vx = 0; }
+        if (n.x < -half) { n.x = -half; n.vx = 0; }
+        if (n.z >  half) { n.z =  half; n.vz = 0; }
+        if (n.z < -half) { n.z = -half; n.vz = 0; }
+        if (isFreeNode(n)) {
+            if (n.y >  half) { n.y =  half; n.vy = 0; }
+            if (n.y < -half) { n.y = -half; n.vy = 0; }
+        }
+
         setNodeMeshPosition(n);
     }
 
@@ -564,6 +633,7 @@ function simStep() {
 
 function rebuild() {
     buildPlanes();
+    buildBoundsBox();
     buildNodes();
     buildEdges();
     refreshPlanesPanel();
@@ -697,6 +767,9 @@ renderer.domElement.addEventListener('pointermove', e => {
         node.x = point.x;
         node.z = point.z;
     }
+    // Drag is also barred by the bounding cube — drop the cursor outside
+    // the cube and the node sticks at the wall.
+    clampNodeToBounds(node);
     setNodeMeshPosition(node);
     state.edges.forEach(eg => {
         if (eg.fromId === node.id || eg.toId === node.id) updateEdgeGeometry(eg);
@@ -1467,6 +1540,22 @@ document.getElementById('btn-orbit').addEventListener('click', () => {
 const btnLayout = document.getElementById('btn-layout');
 if (btnLayout) btnLayout.addEventListener('click', () => reheat(1.0));
 
+// ---------- bounds slider ----------
+const boundsSlider = document.getElementById('bounds-slider');
+const boundsReadout = document.getElementById('bounds-readout');
+if (boundsSlider && boundsReadout) {
+    boundsSlider.value = state.bounds.half;
+    boundsReadout.textContent = state.bounds.half;
+    boundsSlider.addEventListener('input', () => {
+        state.bounds.half = parseInt(boundsSlider.value, 10);
+        boundsReadout.textContent = state.bounds.half;
+        buildBoundsBox();
+        clampAllNodes();
+    });
+    // Persist on slider release; per-input writes would thrash localStorage.
+    boundsSlider.addEventListener('change', () => save());
+}
+
 const helpCard = document.getElementById('help-card');
 document.getElementById('btn-help').addEventListener('click', () => {
     helpCard.classList.toggle('hidden');
@@ -1752,7 +1841,13 @@ window.addEventListener('storage', (e) => {
     state.planes = fresh.planes;
     state.nodes = fresh.nodes;
     state.edges = fresh.edges;
+    state.bounds = fresh.bounds;
     rebuild();
+    // Reflect a bounds change made in another tab in the slider UI.
+    if (boundsSlider && boundsReadout) {
+        boundsSlider.value = state.bounds.half;
+        boundsReadout.textContent = state.bounds.half;
+    }
     // Selection / connect state may now point at a missing node; clear
     // anything stale before re-applying visuals.
     if (selectedId && !state.nodes.some(n => n.id === selectedId)) selectedId = null;

@@ -104,6 +104,28 @@ body.lattice { --accent: var(--layer-2); overflow: hidden; }
     font-family: var(--mono);
 }
 
+/* Bounds slider — uniform-resize control for the lattice barrier. */
+.pp-bounds {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--dim-2);
+}
+.pp-bounds .pp-header { margin-bottom: 6px; }
+.pp-bounds-slider {
+    width: 100%;
+    accent-color: var(--layer-2);
+    margin: 6px 0 4px;
+    cursor: pointer;
+}
+.pp-bounds-readout {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-align: right;
+    color: var(--text);
+    letter-spacing: 1px;
+}
+.pp-bounds .pp-hint { margin-top: 6px; }
+
 /* Source link / connections in side panel */
 .np-source {
     font-size: 11px;

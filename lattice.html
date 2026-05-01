@@ -63,6 +63,14 @@
         <div class="pp-header">PLANES · DEPTH</div>
         <div id="planes-list" class="pp-list"></div>
         <div class="pp-hint">Edit y to re-stack the lattice.</div>
+
+        <div class="pp-bounds">
+            <div class="pp-header">LATTICE · BOUNDS</div>
+            <input type="range" id="bounds-slider" class="pp-bounds-slider"
+                   min="250" max="2200" step="10" value="720">
+            <div class="pp-bounds-readout">±<span id="bounds-readout">720</span> units</div>
+            <div class="pp-hint">Resize the dotted barrier; nodes can't escape it.</div>
+        </div>
     </aside>
 
     <aside id="notes-panel" class="notes-panel hidden">
