@@ -241,16 +241,13 @@ body.lattice { --accent: var(--layer-2); overflow: hidden; }
     color: var(--layer-2);
     font-weight: 700;
 }
-.cp-close {
-    background: transparent;
-    border: none;
+.cp-hint {
+    font-size: 9px;
+    letter-spacing: 1.5px;
     color: var(--dim);
-    font-size: 22px;
-    line-height: 1;
-    padding: 0 4px;
-    cursor: pointer;
+    font-family: var(--mono);
+    text-transform: uppercase;
 }
-.cp-close:hover { color: var(--text); }
 
 .cp-body {
     display: flex;

@@ -27,7 +27,7 @@
     <aside id="comments-panel" class="comments-panel hidden" aria-hidden="true">
         <div class="cp-header">
             <span class="cp-title">LATTICE · COMMENTS</span>
-            <button class="cp-close" id="btn-cp-close" type="button" title="Close">×</button>
+            <span class="cp-hint">click Comments again to close</span>
         </div>
         <div class="cp-body">
             <div class="cp-thread" id="cp-thread"></div>
@@ -129,7 +129,6 @@
 
         const panel  = document.getElementById('comments-panel');
         const btn    = document.getElementById('btn-comments');
-        const close  = document.getElementById('btn-cp-close');
         const thread = document.getElementById('cp-thread');
         const form   = document.getElementById('cp-form');
         const input  = document.getElementById('cp-input');
@@ -193,7 +192,6 @@
         }
 
         btn.addEventListener('click', () => toggle());
-        close.addEventListener('click', () => toggle(false));
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();

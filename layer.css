@@ -195,12 +195,12 @@ body.layer-factory  .breadcrumb { color: var(--layer-3); }
 }
 .hidden { display: none; }
 
-/* Notes panel */
+/* Notes panel — full Wikipedia-style article for the selected node. */
 .notes-panel {
     position: fixed;
     top: 0; right: 0; bottom: 0;
-    width: 380px;
-    background: rgba(8, 4, 0, 0.96);
+    width: 440px;
+    background: rgba(3, 16, 10, 0.97);
     border-left: 1px solid var(--dim-2);
     z-index: 40;
     display: flex;
@@ -234,25 +234,6 @@ body.layer-factory  .breadcrumb { color: var(--layer-3); }
     padding: 0 4px;
 }
 .np-close:hover { color: var(--text); }
-
-.np-wiki {
-    background: transparent;
-    border: 1px solid var(--accent, #2dcc66);
-    color: var(--accent, #2dcc66);
-    font-family: var(--font);
-    font-size: 9px;
-    letter-spacing: 2px;
-    padding: 5px 9px;
-    text-transform: uppercase;
-    text-decoration: none;
-    margin-left: auto;
-    margin-right: 8px;
-    transition: background 0.15s, color 0.15s;
-}
-.np-wiki:hover {
-    background: var(--accent, #2dcc66);
-    color: #000;
-}
 
 /* Image-as-node-face frame ring (replaces the dot when a node has a
    primary image attached). */
@@ -403,3 +384,135 @@ body.layer-factory  .breadcrumb { color: var(--layer-3); }
     cursor: pointer;
 }
 .np-delete:hover { background: var(--danger); color: #000; }
+
+/* ----- wiki-style additions ----- */
+
+.np-title-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--dim-2);
+    color: var(--accent, #2dcc66);
+    font-family: var(--font);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 4px 0 10px;
+    outline: none;
+    margin-bottom: 6px;
+}
+.np-title-input::placeholder { color: var(--dim); font-style: italic; font-weight: 400; }
+
+.np-byline {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--dim);
+    font-family: var(--mono);
+    margin-bottom: 6px;
+}
+.np-byline-user { color: var(--text); }
+
+.np-image-hint {
+    margin-top: 6px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--dim);
+    font-family: var(--mono);
+}
+
+/* Mark the primary image inside the panel grid. */
+.np-image-thumb.primary { box-shadow: 0 0 0 2px var(--accent, #2dcc66) inset; }
+.np-image-thumb-promote {
+    position: absolute;
+    bottom: 0; left: 0;
+    background: rgba(0, 0, 0, 0.75);
+    border: none;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    padding: 2px 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+.np-image-thumb-promote:hover { color: var(--accent, #2dcc66); }
+.np-image-thumb-primary-tag {
+    position: absolute;
+    top: 2px; left: 2px;
+    background: var(--accent, #2dcc66);
+    color: #000;
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    padding: 1px 4px;
+}
+
+/* Comments inside the side panel. */
+.np-comments {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.np-comments-empty {
+    font-size: 11px;
+    color: var(--dim);
+    font-style: italic;
+}
+.np-comment {
+    border: 1px solid var(--dim-2);
+    padding: 8px 10px;
+}
+.np-comment-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+}
+.np-comment-user { color: var(--accent, #2dcc66); }
+.np-comment-stamp { color: var(--dim); letter-spacing: 1px; }
+.np-comment-body {
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    color: var(--text);
+}
+
+.np-comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid var(--dim-2);
+    padding: 8px 10px;
+}
+.np-comment-form textarea {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--dim-2);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 7px 9px;
+    outline: none;
+    resize: vertical;
+    min-height: 48px;
+    box-sizing: border-box;
+}
+.np-comment-form textarea:focus { border-color: var(--accent, #2dcc66); }
+.np-comment-submit {
+    align-self: flex-end;
+    background: transparent;
+    border: 1px solid var(--accent, #2dcc66);
+    color: var(--accent, #2dcc66);
+    font-family: var(--font);
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 6px 12px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.np-comment-submit:hover { background: var(--accent, #2dcc66); color: #000; }

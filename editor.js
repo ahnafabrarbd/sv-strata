@@ -45,8 +45,7 @@
             var s = JSON.parse(raw);
             var nodes = Array.isArray(s.nodes) ? s.nodes : [];
             // Legacy → wiki schema: copy any `description` field onto the
-            // new `detail` field so both the side panel and note.html
-            // read/write the same canonical field.
+            // canonical `detail` field used by every wiki section.
             nodes.forEach(function (n) {
                 if (n && n.description != null && n.detail == null) {
                     n.detail = n.description;
@@ -503,23 +502,65 @@
     // --- Notes panel ---
     var panel = document.getElementById('notes-panel');
     var npTitle = document.getElementById('np-title');
-    var npDesc = document.getElementById('np-description');
+    var npByline = document.getElementById('np-byline');
+    var npGenealogy = document.getElementById('np-genealogy');
+    var npHistory = document.getElementById('np-history');
+    var npDetail = document.getElementById('np-detail');
+    var npSpecial = document.getElementById('np-special');
     var npImages = document.getElementById('np-images');
     var npLinks = document.getElementById('np-links');
+    var npComments = document.getElementById('np-comments');
+    var npCommentInput = document.getElementById('np-comment-input');
+    var npCommentForm = document.getElementById('np-comment-form');
     var npImageInput = document.getElementById('np-image-input');
+
+    // Backfill wiki fields onto a node so the textareas / lists never see
+    // undefined values. Mutates in place; the caller still owns the node.
+    function ensureWikiFields(n) {
+        if (!n) return n;
+        if (n.genealogy == null) n.genealogy = '';
+        if (n.history   == null) n.history   = '';
+        if (n.detail    == null) n.detail    = n.description != null ? n.description : '';
+        if (n.special   == null) n.special   = '';
+        if (!Array.isArray(n.images))   n.images   = [];
+        if (!Array.isArray(n.links))    n.links    = [];
+        if (!Array.isArray(n.comments)) n.comments = [];
+        if (!n.createdBy) {
+            var u = (window.SVAuth && window.SVAuth.currentUser) ? window.SVAuth.currentUser() : null;
+            n.createdBy = (u && u.username) || 'unknown';
+        }
+        if (!n.createdAt) n.createdAt = new Date().toISOString();
+        if (n.description != null) delete n.description;
+        return n;
+    }
+
+    function renderByline(n) {
+        var dt = new Date(n.createdAt);
+        var stamp = isNaN(dt.getTime()) ? '' : dt.toISOString().slice(0, 10);
+        npByline.innerHTML =
+            'by <span class="np-byline-user">@' + escapeHtml(n.createdBy) + '</span>' +
+            (stamp ? ' · created ' + stamp : '');
+    }
+
+    function escapeHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
 
     function showPanel(nodeId) {
         var n = nodes.find(function (x) { return x.id === nodeId; });
         if (!n) { hidePanel(); return; }
+        ensureWikiFields(n);
         panel.classList.remove('hidden');
-        npTitle.value = n.title || '';
-        npDesc.value = n.detail || '';
-        var wikiLink = document.getElementById('np-wiki');
-        if (wikiLink) {
-            wikiLink.href = 'note.html?layer=' + layerId + '&id=' + encodeURIComponent(n.id);
-        }
+        npTitle.value      = n.title     || '';
+        npGenealogy.value  = n.genealogy || '';
+        npHistory.value    = n.history   || '';
+        npDetail.value     = n.detail    || '';
+        npSpecial.value    = n.special   || '';
+        renderByline(n);
         renderPanelImages(n);
         renderPanelLinks(n);
+        renderPanelComments(n);
     }
 
     function hidePanel() {
@@ -542,11 +583,32 @@
         var imgs = n.images || [];
         imgs.forEach(function (img, idx) {
             var wrap = document.createElement('div');
-            wrap.className = 'np-image-thumb';
+            wrap.className = 'np-image-thumb' + (idx === 0 ? ' primary' : '');
             var image = document.createElement('img');
             image.src = img.data;
             image.alt = img.name || '';
             wrap.appendChild(image);
+
+            if (idx === 0) {
+                var tag = document.createElement('span');
+                tag.className = 'np-image-thumb-primary-tag';
+                tag.textContent = 'FACE';
+                wrap.appendChild(tag);
+            } else {
+                var promote = document.createElement('button');
+                promote.className = 'np-image-thumb-promote';
+                promote.type = 'button';
+                promote.textContent = 'Make face';
+                promote.title = 'Use this image as the node face';
+                promote.addEventListener('click', function () {
+                    var moved = n.images.splice(idx, 1)[0];
+                    n.images.unshift(moved);
+                    save();
+                    renderPanelImages(n);
+                    rerenderNode(n);
+                });
+                wrap.appendChild(promote);
+            }
 
             var rm = document.createElement('button');
             rm.className = 'np-image-remove';
@@ -615,19 +677,27 @@
     });
     npTitle.addEventListener('blur', save);
 
-    // Description: debounce save while typing, commit on blur
-    var descSaveTimer = null;
-    npDesc.addEventListener('input', function () {
-        var n = getSelectedNode();
-        if (!n) return;
-        n.detail = npDesc.value;
-        clearTimeout(descSaveTimer);
-        descSaveTimer = setTimeout(save, 400);
-    });
-    npDesc.addEventListener('blur', function () {
-        clearTimeout(descSaveTimer);
-        save();
-    });
+    // Each wiki textarea: live-write the field on input (debounced save),
+    // commit on blur. Same pattern across genealogy / history / detail /
+    // special so they're interchangeable.
+    function bindWikiField(el, field) {
+        var t = null;
+        el.addEventListener('input', function () {
+            var n = getSelectedNode();
+            if (!n) return;
+            n[field] = el.value;
+            clearTimeout(t);
+            t = setTimeout(save, 400);
+        });
+        el.addEventListener('blur', function () {
+            clearTimeout(t);
+            save();
+        });
+    }
+    bindWikiField(npGenealogy, 'genealogy');
+    bindWikiField(npHistory,   'history');
+    bindWikiField(npDetail,    'detail');
+    bindWikiField(npSpecial,   'special');
 
     npImageInput.addEventListener('change', async function (e) {
         var n = getSelectedNode();
@@ -663,6 +733,79 @@
         if (!n.links) n.links = [];
         n.links.push({ url: '', label: '' });
         renderPanelLinks(n);
+    });
+
+    function renderPanelComments(n) {
+        npComments.innerHTML = '';
+        var items = (n.comments || []);
+        if (!items.length) {
+            var empty = document.createElement('div');
+            empty.className = 'np-comments-empty';
+            empty.textContent = 'No comments yet.';
+            npComments.appendChild(empty);
+            return;
+        }
+        // Newest first.
+        items.slice().reverse().forEach(function (c) {
+            var wrap = document.createElement('div');
+            wrap.className = 'np-comment';
+
+            var head = document.createElement('div');
+            head.className = 'np-comment-head';
+            var user = document.createElement('span');
+            user.className = 'np-comment-user';
+            user.textContent = '@' + (c.author || 'anon');
+            var stamp = document.createElement('span');
+            stamp.className = 'np-comment-stamp';
+            var dt = new Date(c.createdAt);
+            stamp.textContent = isNaN(dt.getTime()) ? '' : dt.toLocaleString();
+            head.appendChild(user);
+            head.appendChild(stamp);
+
+            var body = document.createElement('div');
+            body.className = 'np-comment-body';
+            body.textContent = c.text;
+
+            wrap.appendChild(head);
+            wrap.appendChild(body);
+            npComments.appendChild(wrap);
+        });
+    }
+
+    npCommentForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var n = getSelectedNode();
+        if (!n) return;
+        var text = (npCommentInput.value || '').trim();
+        if (!text) return;
+        var u = (window.SVAuth && window.SVAuth.currentUser) ? window.SVAuth.currentUser() : null;
+        if (!Array.isArray(n.comments)) n.comments = [];
+        n.comments.push({
+            author: (u && u.username) || 'anon',
+            text: text,
+            createdAt: new Date().toISOString()
+        });
+        save();
+        npCommentInput.value = '';
+        renderPanelComments(n);
+    });
+
+    // Cross-tab sync — if the same layer storage key is updated in
+    // another tab, refresh the open panel so newly-posted comments and
+    // edits appear without a manual reload.
+    window.addEventListener('storage', function (e) {
+        if (e.key !== STORAGE_KEY) return;
+        var fresh = loadState();
+        nodes = fresh.nodes;
+        edges = fresh.edges;
+        view = fresh.view;
+        renderAll();
+        applyView();
+        if (selectedId) {
+            var n = nodes.find(function (x) { return x.id === selectedId; });
+            if (n) showPanel(n.id);
+            else { selectedId = null; hidePanel(); }
+        }
     });
 
     document.getElementById('btn-np-close').addEventListener('click', function () {
