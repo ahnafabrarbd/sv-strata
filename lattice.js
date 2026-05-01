@@ -422,6 +422,146 @@ function refreshEdgeLabel(e) {
     rec.sprite = newSprite;
 }
 
+// ---------- force-directed physics (Obsidian-style, 3D) ----------
+// Constraint: nodes that live on a 2D plane move only in x and z within
+// that plane (their y is whatever the plane is at). Free Z-nodes are
+// free in all three axes. Same alpha-decay machinery as the per-layer
+// 2D simulation.
+const PHYSICS = {
+    REPULSION:     14000,
+    SPRING_K:      0.022,
+    SPRING_LENGTH: 220,
+    CENTER_X_K:    0.0006,
+    CENTER_Z_K:    0.0006,
+    CENTER_Y_K:    0.0004,    // weaker — let free Z-nodes drift further
+    DAMPING:       0.86,
+    ALPHA_DECAY:   0.945,
+    ALPHA_MIN:     0.001,
+    MAX_VELOCITY:  60,
+    KICK:          0.6
+};
+let simAlpha = 0;
+
+function reheat(alpha) {
+    simAlpha = Math.max(simAlpha, alpha != null ? alpha : PHYSICS.KICK);
+}
+
+function simStep() {
+    if (simAlpha < PHYSICS.ALPHA_MIN || state.nodes.length < 2) return;
+
+    const nodes = state.nodes;
+    const edges = state.edges;
+
+    // Lazily initialise velocity fields.
+    for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        if (typeof n.vx !== 'number') n.vx = 0;
+        if (typeof n.vy !== 'number') n.vy = 0;
+        if (typeof n.vz !== 'number') n.vz = 0;
+    }
+
+    // Repulsion — every pair, 3D Coulomb.
+    for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        const ay = nodeAbsoluteY(a);
+        for (let j = i + 1; j < nodes.length; j++) {
+            const b = nodes[j];
+            const by = nodeAbsoluteY(b);
+            let dx = a.x - b.x;
+            let dy = ay - by;
+            let dz = a.z - b.z;
+            let d2 = dx * dx + dy * dy + dz * dz;
+            if (d2 < 1) { d2 = 1; dx = Math.random() - 0.5; dz = Math.random() - 0.5; }
+            const dist = Math.sqrt(d2);
+            const f = (PHYSICS.REPULSION / d2) * simAlpha;
+            const fx = (dx / dist) * f;
+            const fy = (dy / dist) * f;
+            const fz = (dz / dist) * f;
+            a.vx += fx; a.vy += fy; a.vz += fz;
+            b.vx -= fx; b.vy -= fy; b.vz -= fz;
+        }
+    }
+
+    // Springs along edges (also 3D).
+    for (let k = 0; k < edges.length; k++) {
+        const e = edges[k];
+        let a = null, b = null;
+        for (let l = 0; l < nodes.length; l++) {
+            if (nodes[l].id === e.fromId) a = nodes[l];
+            else if (nodes[l].id === e.toId) b = nodes[l];
+        }
+        if (!a || !b) continue;
+        const ay = nodeAbsoluteY(a);
+        const by = nodeAbsoluteY(b);
+        const dx = b.x - a.x;
+        const dy = by - ay;
+        const dz = b.z - a.z;
+        const dist = Math.max(0.1, Math.sqrt(dx * dx + dy * dy + dz * dz));
+        const f = PHYSICS.SPRING_K * (dist - PHYSICS.SPRING_LENGTH) * simAlpha;
+        const fx = (dx / dist) * f;
+        const fy = (dy / dist) * f;
+        const fz = (dz / dist) * f;
+        a.vx += fx; a.vy += fy; a.vz += fz;
+        b.vx -= fx; b.vy -= fy; b.vz -= fz;
+    }
+
+    // Pull toward the world axis to keep things from drifting off-screen.
+    for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        n.vx -= n.x * PHYSICS.CENTER_X_K * simAlpha;
+        n.vz -= n.z * PHYSICS.CENTER_Z_K * simAlpha;
+        if (isFreeNode(n)) {
+            const ny = (typeof n.y === 'number') ? n.y : 0;
+            n.vy -= ny * PHYSICS.CENTER_Y_K * simAlpha;
+        }
+    }
+
+    // Integrate + damp + apply per-node constraints.
+    for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        if (n._fixed) { n.vx = 0; n.vy = 0; n.vz = 0; continue; }
+
+        n.vx *= PHYSICS.DAMPING;
+        n.vy *= PHYSICS.DAMPING;
+        n.vz *= PHYSICS.DAMPING;
+
+        const vmax2 = PHYSICS.MAX_VELOCITY * PHYSICS.MAX_VELOCITY;
+        const vmag2 = n.vx * n.vx + n.vy * n.vy + n.vz * n.vz;
+        if (vmag2 > vmax2) {
+            const s = PHYSICS.MAX_VELOCITY / Math.sqrt(vmag2);
+            n.vx *= s; n.vy *= s; n.vz *= s;
+        }
+
+        n.x += n.vx;
+        n.z += n.vz;
+
+        if (isFreeNode(n)) {
+            // Free Z-nodes: full 3D motion.
+            if (typeof n.y !== 'number') n.y = 0;
+            n.y += n.vy;
+        } else {
+            // Plane-bound nodes: y stays at their plane's y. Discard any
+            // accumulated y-velocity so they don't drift off the plane
+            // even momentarily.
+            n.vy = 0;
+        }
+
+        setNodeMeshPosition(n);
+    }
+
+    // Edges follow their endpoints.
+    for (let k = 0; k < edges.length; k++) {
+        updateEdgeGeometry(edges[k]);
+    }
+
+    simAlpha *= PHYSICS.ALPHA_DECAY;
+
+    // Persist once we settle, not every frame.
+    if (simAlpha < PHYSICS.ALPHA_MIN) {
+        save();
+    }
+}
+
 function rebuild() {
     buildPlanes();
     buildNodes();
@@ -503,6 +643,9 @@ renderer.domElement.addEventListener('pointerdown', e => {
     const pick = pickAt(e.clientX, e.clientY);
     if (pick && pick.type === 'node' && !connectMode) {
         dragging = { type: 'node', nodeId: pick.nodeId, moved: false };
+        // Pin the node during drag so the simulation doesn't tug it.
+        const dn = state.nodes.find(x => x.id === pick.nodeId);
+        if (dn) { dn._fixed = true; dn.vx = 0; dn.vy = 0; dn.vz = 0; }
         controls.enabled = false;
         renderer.domElement.setPointerCapture(e.pointerId);
     }
@@ -541,6 +684,11 @@ renderer.domElement.addEventListener('pointerup', e => {
     const wasDrag = (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY)) > 4;
     if (dragging) {
         if (dragging.moved) save();
+        // Release the pinned node and let the sim re-balance neighbours
+        // around its new position.
+        const dn2 = state.nodes.find(x => x.id === dragging.nodeId);
+        if (dn2) dn2._fixed = false;
+        if (dragging.moved) reheat(0.35);
         const wasNodeDrag = dragging;
         dragging = null;
         controls.enabled = true;
@@ -589,6 +737,7 @@ renderer.domElement.addEventListener('pointerup', e => {
                 state.edges = state.edges.filter(x => x.id !== edge.id);
                 disposeEdge(edge.id);
                 save();
+                reheat();
                 if (selectedId) {
                     const sel = state.nodes.find(x => x.id === selectedId);
                     if (sel) renderEdgesPanel(sel);
@@ -625,6 +774,7 @@ renderer.domElement.addEventListener('pointerup', e => {
         state.nodes.push(node);
         addNodeMesh(node);
         save();
+        reheat();
     }
 });
 
@@ -688,6 +838,7 @@ function handleConnectClick(nodeId) {
         state.edges.push(edge);
         addEdgeLine(edge);
         save();
+        reheat();
     }
     pendingFromId = null;
     refreshSelectionVisuals();
@@ -875,6 +1026,7 @@ function renderEdgesPanel(n) {
             state.edges = state.edges.filter(x => x.id !== e.id);
             disposeEdge(e.id);
             save();
+            reheat();
             renderEdgesPanel(n);
         });
 
@@ -1037,6 +1189,7 @@ function deleteNode(id) {
     if (selectedId === id) { selectedId = null; hidePanel(); }
     if (pendingFromId === id) { pendingFromId = null; updateBanner(); updateGuideLine(); }
     save();
+    reheat();
 }
 
 // ---------- keyboard ----------
@@ -1075,6 +1228,9 @@ document.getElementById('btn-orbit').addEventListener('click', () => {
     camera.position.set(820, 580, 1080);
     controls.update();
 });
+
+const btnLayout = document.getElementById('btn-layout');
+if (btnLayout) btnLayout.addEventListener('click', () => reheat(1.0));
 
 const helpCard = document.getElementById('help-card');
 document.getElementById('btn-help').addEventListener('click', () => {
@@ -1124,6 +1280,7 @@ document.getElementById('btn-add-znode').addEventListener('click', () => {
     state.nodes.push(node);
     addNodeMesh(node);
     save();
+    reheat();
     selectNode(node.id);
 });
 
@@ -1218,6 +1375,7 @@ function importLayerInto(plane) {
 
     save();
     rebuild();
+    reheat(1.0);    // big import — reheat hard so the new cluster spreads out.
     banner.textContent = 'Imported ' + plane.label + ': ' + added + ' new · ' + updated + ' synced';
     banner.classList.remove('hidden');
     setTimeout(() => { if (!connectMode) banner.classList.add('hidden'); }, 2400);
@@ -1327,6 +1485,7 @@ window.addEventListener('resize', () => {
 function tick() {
     controls.update();
     if (connectMode && pendingFromId) updateGuideLine();
+    simStep();
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
 }
