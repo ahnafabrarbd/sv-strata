@@ -37,6 +37,139 @@
     var connectMode = false;
     var pendingFromId = null;
 
+    // ----- Force-directed layout (Obsidian-style) -----
+    // Repulsion between every pair, spring along every edge, gentle pull
+    // toward the origin, and an alpha-decay so the simulation pauses when
+    // the graph settles. Topology changes (add node / add edge / drag
+    // release) reheat alpha to make the graph re-arrange.
+    var PHYSICS = {
+        REPULSION:     8500,    // Coulomb-like; bigger = nodes spread further
+        SPRING_K:      0.045,   // spring stiffness
+        SPRING_LENGTH: 110,     // ideal edge length, world units
+        CENTER_K:      0.0009,  // pull toward origin (prevents drift)
+        DAMPING:       0.86,    // velocity multiplier per frame
+        ALPHA_DECAY:   0.94,
+        ALPHA_MIN:     0.001,
+        MAX_VELOCITY:  30,
+        KICK:          0.6      // alpha set to this on topology change
+    };
+    var simAlpha = 0;
+    var simRAF = 0;
+
+    function reheat(alpha) {
+        simAlpha = Math.max(simAlpha, alpha != null ? alpha : PHYSICS.KICK);
+        if (!simRAF) simRAF = requestAnimationFrame(simStep);
+    }
+
+    function simStep() {
+        if (simAlpha < PHYSICS.ALPHA_MIN || nodes.length < 2) {
+            simRAF = 0;
+            // Settle persisted to disk only when the graph has actually
+            // converged; per-frame saves would be wasteful.
+            save();
+            return;
+        }
+
+        // Initialise velocity slots lazily.
+        for (var i = 0; i < nodes.length; i++) {
+            var n0 = nodes[i];
+            if (typeof n0.vx !== 'number') n0.vx = 0;
+            if (typeof n0.vy !== 'number') n0.vy = 0;
+        }
+
+        // Repulsion — every pair gets a Coulomb-like push.
+        for (var i = 0; i < nodes.length; i++) {
+            var a = nodes[i];
+            for (var j = i + 1; j < nodes.length; j++) {
+                var b = nodes[j];
+                var dxr = a.x - b.x;
+                var dyr = a.y - b.y;
+                var d2 = dxr * dxr + dyr * dyr;
+                if (d2 < 0.01) { d2 = 0.01; dxr = (Math.random() - 0.5); dyr = (Math.random() - 0.5); }
+                var distR = Math.sqrt(d2);
+                var fR = (PHYSICS.REPULSION / d2) * simAlpha;
+                var fxR = (dxr / distR) * fR;
+                var fyR = (dyr / distR) * fR;
+                a.vx += fxR; a.vy += fyR;
+                b.vx -= fxR; b.vy -= fyR;
+            }
+        }
+
+        // Springs along edges.
+        for (var k = 0; k < edges.length; k++) {
+            var e = edges[k];
+            var nA = null, nB = null;
+            for (var l = 0; l < nodes.length; l++) {
+                if (nodes[l].id === e.fromId) nA = nodes[l];
+                else if (nodes[l].id === e.toId) nB = nodes[l];
+            }
+            if (!nA || !nB) continue;
+            var dxs = nB.x - nA.x;
+            var dys = nB.y - nA.y;
+            var distS = Math.max(0.1, Math.sqrt(dxs * dxs + dys * dys));
+            var fS = PHYSICS.SPRING_K * (distS - PHYSICS.SPRING_LENGTH) * simAlpha;
+            var fxS = (dxs / distS) * fS;
+            var fyS = (dys / distS) * fS;
+            nA.vx += fxS; nA.vy += fyS;
+            nB.vx -= fxS; nB.vy -= fyS;
+        }
+
+        // Gentle pull toward the origin so the graph doesn't drift off.
+        for (var i = 0; i < nodes.length; i++) {
+            var n1 = nodes[i];
+            n1.vx -= n1.x * PHYSICS.CENTER_K * simAlpha;
+            n1.vy -= n1.y * PHYSICS.CENTER_K * simAlpha;
+        }
+
+        // Damp + integrate. Skip nodes that are pinned (currently dragged
+        // by the user) — their position is set externally.
+        for (var i = 0; i < nodes.length; i++) {
+            var n2 = nodes[i];
+            if (n2._fixed) { n2.vx = 0; n2.vy = 0; continue; }
+            n2.vx *= PHYSICS.DAMPING;
+            n2.vy *= PHYSICS.DAMPING;
+            var v2 = n2.vx * n2.vx + n2.vy * n2.vy;
+            var vmax2 = PHYSICS.MAX_VELOCITY * PHYSICS.MAX_VELOCITY;
+            if (v2 > vmax2) {
+                var v = Math.sqrt(v2);
+                n2.vx = (n2.vx / v) * PHYSICS.MAX_VELOCITY;
+                n2.vy = (n2.vy / v) * PHYSICS.MAX_VELOCITY;
+            }
+            n2.x += n2.vx;
+            n2.y += n2.vy;
+            var g = nodesLayer.querySelector('[data-id="' + cssEscape(n2.id) + '"]');
+            if (g) g.setAttribute('transform', 'translate(' + n2.x + ',' + n2.y + ')');
+        }
+
+        // Update every edge's line endpoints + label position.
+        for (var k = 0; k < edges.length; k++) {
+            var e2 = edges[k];
+            var ge = edgesLayer.querySelector('[data-id="' + cssEscape(e2.id) + '"]');
+            if (!ge) continue;
+            var fA = null, fB = null;
+            for (var l = 0; l < nodes.length; l++) {
+                if (nodes[l].id === e2.fromId) fA = nodes[l];
+                else if (nodes[l].id === e2.toId) fB = nodes[l];
+            }
+            if (!fA || !fB) continue;
+            var lines = ge.querySelectorAll('line');
+            for (var li = 0; li < lines.length; li++) {
+                lines[li].setAttribute('x1', fA.x);
+                lines[li].setAttribute('y1', fA.y);
+                lines[li].setAttribute('x2', fB.x);
+                lines[li].setAttribute('y2', fB.y);
+            }
+            var lbl = ge.querySelector('.edge-label');
+            if (lbl) {
+                lbl.setAttribute('x', (fA.x + fB.x) / 2);
+                lbl.setAttribute('y', (fA.y + fB.y) / 2 - 4);
+            }
+        }
+
+        simAlpha *= PHYSICS.ALPHA_DECAY;
+        simRAF = requestAnimationFrame(simStep);
+    }
+
     function loadState() {
         var raw = localStorage.getItem(STORAGE_KEY);
         var def = { view: { x: 0, y: 0, scale: 1 }, nodes: [], edges: [] };
@@ -260,6 +393,7 @@
         if (pendingFromId === id) { pendingFromId = null; updateBanner(); }
         renderAll();
         save();
+        reheat();
     }
 
     function deleteEdge(id) {
@@ -267,6 +401,7 @@
         var g = edgesLayer.querySelector('[data-id="' + cssEscape(id) + '"]');
         if (g) g.remove();
         save();
+        reheat();
     }
 
     function editEdgeLabel(id) {
@@ -300,6 +435,7 @@
         edges.push(e);
         renderEdge(e);
         save();
+        reheat();
     }
 
     function toggleConnectMode() {
@@ -344,6 +480,7 @@
         nodes.push(n);
         renderNode(n);
         save();
+        reheat();
     }
 
     // --- Pointer interactions ---
@@ -354,6 +491,10 @@
         if (nid && !connectMode) {
             var n = nodes.find(function (x) { return x.id === nid; });
             if (!n) return;
+            // Pin the node while it's under the user's pointer so the
+            // physics step doesn't tug against the drag.
+            n._fixed = true;
+            n.vx = 0; n.vy = 0;
             dragging = {
                 type: 'node',
                 nodeId: nid,
@@ -407,6 +548,11 @@
         if (!dragging) return;
         var d = dragging;
         var wasDrag = didDrag;
+        // Release any pinned-during-drag node and let physics resume.
+        if (d.type === 'node') {
+            var dn = nodes.find(function (x) { return x.id === d.nodeId; });
+            if (dn) { dn._fixed = false; }
+        }
         dragging = null;
         svg.classList.remove('panning', 'dragging-node');
 
@@ -457,6 +603,10 @@
             }
         } else {
             save();
+            // After the user lets go of a node, reheat so neighbouring
+            // nodes can adjust to its new position — Obsidian-style soft
+            // pull rather than hard fix.
+            if (d.type === 'node') reheat(0.35);
         }
     });
 
@@ -489,6 +639,8 @@
     // --- Toolbar ---
     document.getElementById('btn-fit').addEventListener('click', fitToContour);
     document.getElementById('btn-connect').addEventListener('click', toggleConnectMode);
+    var layoutBtn = document.getElementById('btn-layout');
+    if (layoutBtn) layoutBtn.addEventListener('click', function () { reheat(1.0); });
     var helpCard = document.getElementById('help-card');
     document.getElementById('btn-help').addEventListener('click', function () {
         helpCard.classList.toggle('hidden');
