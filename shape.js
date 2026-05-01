@@ -16,7 +16,7 @@ window.SV_LAYERS = [
         title: 'IDEOLOGY',
         subtitle: 'Middle stratum',
         hologram: 'network',
-        placeholder: 'The network of ideas, frameworks and beliefs that make up the consciousness of Silicon Valley.'
+        placeholder: 'The network of ideas, frameworks and beliefs that make up the consciousness of Silicon Valley. This is the backend of the game.'
     },
     {
         id: 'factory',
