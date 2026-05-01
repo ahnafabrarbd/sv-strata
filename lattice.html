@@ -19,9 +19,24 @@
             <button id="btn-connect" title="Connect any two nodes — same plane or across planes">Connect ⌁</button>
             <button id="btn-focus" title="Top-down view of the selected plane">Focus</button>
             <button id="btn-orbit" title="Return to 3D orbit">Orbit</button>
+            <button id="btn-comments" title="General lattice comments">Comments 💬</button>
             <button id="btn-help" title="Show help">?</button>
         </div>
     </header>
+
+    <aside id="comments-panel" class="comments-panel hidden" aria-hidden="true">
+        <div class="cp-header">
+            <span class="cp-title">LATTICE · COMMENTS</span>
+            <button class="cp-close" id="btn-cp-close" type="button" title="Close">×</button>
+        </div>
+        <div class="cp-body">
+            <div class="cp-thread" id="cp-thread"></div>
+            <form class="cp-form" id="cp-form">
+                <textarea id="cp-input" placeholder="Comment on the lattice…" rows="3" required></textarea>
+                <button type="submit" class="cp-submit">Post</button>
+            </form>
+        </div>
+    </aside>
 
     <div id="help-card" class="help-card hidden">
         <div><b>Drag empty</b> — orbit the lattice</div>
@@ -100,5 +115,116 @@
     }
     </script>
     <script type="module" src="lattice.js"></script>
+
+    <script>
+    // Floating "Lattice · Comments" thread. Self-contained — talks to
+    // localStorage at sv-strata.lattice.comments, listens for storage
+    // events so a comment posted in another tab appears here without a
+    // refresh. Independent of lattice.js (which only knows about plane /
+    // node / edge state).
+    (function () {
+        'use strict';
+
+        const KEY = 'sv-strata.lattice.comments';
+
+        const panel  = document.getElementById('comments-panel');
+        const btn    = document.getElementById('btn-comments');
+        const close  = document.getElementById('btn-cp-close');
+        const thread = document.getElementById('cp-thread');
+        const form   = document.getElementById('cp-form');
+        const input  = document.getElementById('cp-input');
+
+        function loadAll() {
+            try {
+                const raw = localStorage.getItem(KEY);
+                if (!raw) return [];
+                const arr = JSON.parse(raw);
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) { return []; }
+        }
+        function saveAll(arr) { localStorage.setItem(KEY, JSON.stringify(arr)); }
+
+        function render() {
+            const items = loadAll();
+            thread.innerHTML = '';
+            if (!items.length) {
+                const empty = document.createElement('div');
+                empty.className = 'cp-empty';
+                empty.textContent = 'No comments yet — start the thread.';
+                thread.appendChild(empty);
+                return;
+            }
+            // Newest first.
+            items.slice().reverse().forEach(c => {
+                const wrap = document.createElement('div');
+                wrap.className = 'cp-item';
+
+                const head = document.createElement('div');
+                head.className = 'cp-item-head';
+                const user = document.createElement('span');
+                user.className = 'cp-item-user';
+                user.textContent = '@' + (c.author || 'anon');
+                const stamp = document.createElement('span');
+                stamp.className = 'cp-item-stamp';
+                const dt = new Date(c.createdAt);
+                stamp.textContent = isNaN(dt.getTime()) ? '' : dt.toLocaleString();
+                head.appendChild(user);
+                head.appendChild(stamp);
+
+                const body = document.createElement('div');
+                body.className = 'cp-item-body';
+                body.textContent = c.text;
+
+                wrap.appendChild(head);
+                wrap.appendChild(body);
+                thread.appendChild(wrap);
+            });
+        }
+
+        function toggle(open) {
+            const isOpen = open != null ? open : panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', !isOpen);
+            panel.setAttribute('aria-hidden', String(!isOpen));
+            btn.classList.toggle('on', isOpen);
+            if (isOpen) {
+                render();
+                setTimeout(() => input.focus(), 0);
+            }
+        }
+
+        btn.addEventListener('click', () => toggle());
+        close.addEventListener('click', () => toggle(false));
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = (input.value || '').trim();
+            if (!text) return;
+            const u = (window.SVAuth && window.SVAuth.currentUser) ? window.SVAuth.currentUser() : null;
+            const all = loadAll();
+            all.push({
+                id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                author: (u && u.username) || 'anon',
+                text,
+                createdAt: new Date().toISOString()
+            });
+            saveAll(all);
+            input.value = '';
+            render();
+        });
+
+        // Real-time across tabs.
+        window.addEventListener('storage', (e) => {
+            if (e.key !== KEY) return;
+            if (!panel.classList.contains('hidden')) render();
+        });
+
+        // Esc closes the panel.
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !panel.classList.contains('hidden')) {
+                toggle(false);
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
