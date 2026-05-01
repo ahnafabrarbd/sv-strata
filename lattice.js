@@ -1753,11 +1753,13 @@ window.addEventListener('storage', (e) => {
     state.nodes = fresh.nodes;
     state.edges = fresh.edges;
     rebuild();
-    if (selectedId) {
-        const stillThere = state.nodes.find(n => n.id === selectedId);
-        if (stillThere) showPanel(selectedId);
-        else { selectedId = null; hidePanel(); }
-    }
+    // Selection / connect state may now point at a missing node; clear
+    // anything stale before re-applying visuals.
+    if (selectedId && !state.nodes.some(n => n.id === selectedId)) selectedId = null;
+    if (pendingFromId && !state.nodes.some(n => n.id === pendingFromId)) pendingFromId = null;
+    refreshSelectionVisuals();
+    if (selectedId) showPanel(selectedId);
+    else hidePanel();
 });
 
 function tick() {
