@@ -35,15 +35,34 @@ body {
 #canvas.panning { cursor: grabbing; }
 #canvas.dragging-node { cursor: grabbing; }
 
-.sv-bg {
-    fill: none;
-    stroke: var(--accent, #44ff8c);
-    stroke-width: 1.5;
-    opacity: 0.18;
+/* Corner hologram — small rotating icon for the current layer. */
+.corner-holo {
+    position: fixed;
+    top: 76px;
+    left: 24px;
+    width: 200px;
+    z-index: 15;
     pointer-events: none;
 }
+.ch-canvas {
+    width: 200px;
+    height: 200px;
+    pointer-events: auto;
+    cursor: grab;
+}
+.ch-canvas:active { cursor: grabbing; }
+.ch-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
+.ch-label {
+    margin-top: 6px;
+    text-align: center;
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent, #44ff8c);
+    pointer-events: auto;
+}
 
-/* Per-layer accent: drives node color, sv-bg color, glow color */
+/* Per-layer accent: drives node color and other accents */
 body.layer-faces    { --accent: var(--layer-1); }
 body.layer-ideology { --accent: var(--layer-2); }
 body.layer-factory  { --accent: var(--layer-3); }

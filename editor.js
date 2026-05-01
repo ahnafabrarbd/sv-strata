@@ -20,8 +20,6 @@
     var nodesLayer = document.getElementById('nodes-layer');
     var edgesLayer = document.getElementById('edges-layer');
     var banner = document.getElementById('banner');
-    var bgPath = document.getElementById('sv-shape-bg');
-    bgPath.setAttribute('d', window.SV_PATH);
 
     // --- State ---
     var STORAGE_KEY = 'sv-strata.layer.' + layerId;
@@ -79,12 +77,30 @@
     }
 
     function fitToContour() {
-        // Center the SV outline (~270, 270) in the viewport.
+        // No more SV outline — fit to the bounding box of the existing nodes,
+        // or center on (0, 0) at scale 1 when empty.
         var rect = svg.getBoundingClientRect();
-        view.scale = Math.min(rect.width / 600, rect.height / 600) || 1;
-        view.scale = Math.min(view.scale, 1.4);
-        view.x = rect.width / 2 - 270 * view.scale;
-        view.y = rect.height / 2 - 270 * view.scale;
+        if (!nodes.length) {
+            view.scale = 1;
+            view.x = rect.width / 2;
+            view.y = rect.height / 2;
+        } else {
+            var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            nodes.forEach(function (n) {
+                if (n.x < minX) minX = n.x;
+                if (n.x > maxX) maxX = n.x;
+                if (n.y < minY) minY = n.y;
+                if (n.y > maxY) maxY = n.y;
+            });
+            var pad = 80;
+            var w = Math.max(1, maxX - minX);
+            var h = Math.max(1, maxY - minY);
+            var sx = (rect.width  - pad * 2) / w;
+            var sy = (rect.height - pad * 2) / h;
+            view.scale = Math.min(2, Math.max(0.3, Math.min(sx, sy, 1.4)));
+            view.x = rect.width  / 2 - ((minX + maxX) / 2) * view.scale;
+            view.y = rect.height / 2 - ((minY + maxY) / 2) * view.scale;
+        }
         applyView();
         save();
     }

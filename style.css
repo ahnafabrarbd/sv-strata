@@ -69,78 +69,84 @@ header > * { pointer-events: auto; }
     width: 100%;
     height: 100%;
 }
-.diagram svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
 
-/* Legacy SV-outline (still used by the current index.html until the
-   holographic trio replaces it in Phase 2). */
-.sv-outline {
-    fill: none;
-    stroke-width: 3.2;
-    stroke-linejoin: round;
-    stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
-}
-.layer { cursor: pointer; transition: filter 0.2s; }
-.layer:hover .sv-outline { stroke-width: 4.2; }
-
-.layer-faces    .sv-outline { stroke: var(--layer-1); filter: url(#glow-1); opacity: 0.95; }
-.layer-ideology .sv-outline { stroke: var(--layer-2); filter: url(#glow-2); opacity: 0.9; }
-.layer-factory  .sv-outline { stroke: var(--layer-3); filter: url(#glow-3); opacity: 0.82; }
-
-.leader { stroke-width: 1; fill: none; }
-.leader-faces    { stroke: var(--layer-1); opacity: 0.55; }
-.leader-ideology { stroke: var(--layer-2); opacity: 0.55; }
-.leader-factory  { stroke: var(--layer-3); opacity: 0.55; }
-
-.layer-hit { fill: transparent; cursor: pointer; }
-
-/* Holographic icon trio (replaces the SV-outline trio in Phase 2) */
+/* Holographic icon trio — landing page */
 .holo-trio {
     position: absolute;
     inset: 0;
+    padding: 80px 40px 64px;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    align-items: center;
-    justify-items: center;
+    gap: 24px;
+    align-items: stretch;
+    justify-items: stretch;
     pointer-events: none;
 }
 .holo-cell {
     position: relative;
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding: 12px 18px 18px;
     pointer-events: auto;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: border-color 0.2s, background 0.2s;
+}
+.holo-cell:hover {
+    border-color: var(--dim-2);
+    background: rgba(255, 255, 255, 0.012);
 }
 .holo-canvas-wrap {
-    width: 320px;
-    height: 320px;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 240px;
     position: relative;
     cursor: grab;
 }
 .holo-canvas-wrap:active { cursor: grabbing; }
-.holo-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
+.holo-canvas-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+
 .holo-cell h2 {
-    margin-top: 14px;
-    font-size: 13px;
+    margin-top: 12px;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: 4px;
+    text-decoration: underline;
+    text-underline-offset: 4px;
 }
 .holo-cell .subtitle {
     font-size: 9px;
     letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--dim);
-    margin-top: 4px;
+    margin-top: 6px;
 }
-.holo-cell .enter {
+
+.holo-note {
     margin-top: 12px;
+    width: 100%;
+    max-width: 320px;
+    font-size: 11px;
+    line-height: 1.55;
+    text-align: center;
+    color: var(--text);
+    padding: 6px 8px;
+    border: 1px dashed transparent;
+    outline: none;
+    cursor: text;
+}
+.holo-note:hover, .holo-note:focus {
+    border-color: var(--dim-2);
+}
+.holo-note[data-empty="true"] {
+    color: var(--dim);
+    font-style: italic;
+}
+
+.holo-cell .enter {
+    margin-top: 14px;
     font-size: 9px;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -149,67 +155,10 @@ header > * { pointer-events: auto; }
     padding-bottom: 2px;
     color: inherit;
 }
+
 .holo-cell.faces    h2, .holo-cell.faces    .enter { color: var(--layer-1); }
 .holo-cell.ideology h2, .holo-cell.ideology .enter { color: var(--layer-2); }
 .holo-cell.factory  h2, .holo-cell.factory  .enter { color: var(--layer-3); }
-
-/* Annotations */
-.annotation {
-    pointer-events: auto;
-    width: 230px;
-    color: var(--text);
-}
-.annotation h2 {
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    margin-bottom: 3px;
-}
-.annotation .subtitle {
-    font-size: 8px;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--dim);
-    margin-bottom: 8px;
-}
-.annotation .body {
-    font-size: 10.5px;
-    line-height: 1.55;
-    min-height: 48px;
-    padding: 5px 6px;
-    border: 1px dashed transparent;
-    outline: none;
-    cursor: text;
-    color: var(--text);
-}
-.annotation .body:hover, .annotation .body:focus {
-    border-color: var(--dim-2);
-}
-.annotation .body[data-empty="true"] {
-    color: var(--dim);
-    font-style: italic;
-}
-.annotation .enter {
-    display: inline-block;
-    margin-top: 9px;
-    font-size: 9px;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: inherit;
-    border-bottom: 1px solid currentColor;
-    padding-bottom: 2px;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.layer-faces      .annotation h2,
-.layer-faces      .annotation .enter      { color: var(--layer-1); }
-.layer-ideology   .annotation h2,
-.layer-ideology   .annotation .enter      { color: var(--layer-2); }
-.layer-factory    .annotation h2,
-.layer-factory    .annotation .enter      { color: var(--layer-3); }
 
 .foot-note {
     position: fixed;
@@ -221,4 +170,13 @@ header > * { pointer-events: auto; }
     text-transform: uppercase;
     font-family: var(--mono);
     pointer-events: none;
+}
+
+@media (max-width: 900px) {
+    .holo-trio {
+        grid-template-columns: 1fr;
+        padding: 76px 16px 52px;
+        overflow-y: auto;
+    }
+    .holo-canvas-wrap { min-height: 260px; }
 }

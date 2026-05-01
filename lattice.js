@@ -9,7 +9,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+import { buildHologram, HOLO_COLORS } from './holograms.js';
 
 (function () {
 'use strict';
@@ -77,28 +77,35 @@ function nodeColor(n) {
     return plane ? plane.color : '#44ff8c';
 }
 
-// ---------- SV contour ----------
-function loadSVContour() {
-    const loader = new SVGLoader();
-    const data = loader.parse(
-        '<svg xmlns="http://www.w3.org/2000/svg"><path d="' + window.SV_PATH + '"/></svg>'
-    );
-    const segs = [];
-    data.paths.forEach(p => p.subPaths.forEach(sub => {
-        segs.push(sub.getPoints(220));
-    }));
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    segs.forEach(seg => seg.forEach(v => {
-        if (v.x < minX) minX = v.x;
-        if (v.x > maxX) maxX = v.x;
-        if (v.y < minY) minY = v.y;
-        if (v.y > maxY) maxY = v.y;
-    }));
-    const cx = (minX + maxX) / 2;
-    const cy = (minY + maxY) / 2;
-    return segs.map(seg => seg.map(v => new THREE.Vector3(v.x - cx, 0, v.y - cy)));
+// ---------- per-layer hologram ----------
+// Each plane carries the holographic icon for its linked layer (the same
+// mask / network / factory geometries used on the index page). Built once
+// per kind and cloned into each plane group so we never duplicate buffers.
+const HOLO_KIND_BY_LAYER = { faces: 'mask', ideology: 'network', factory: 'factory' };
+const HOLO_SCALE = 90;     // world-units per hologram unit
+const HOLO_LIFT  = 24;     // hover the icon slightly above the plane
+
+function holoForPlane(plane) {
+    const kind = HOLO_KIND_BY_LAYER[plane.linkedLayer];
+    if (!kind) return null;
+    const color = HOLO_COLORS[plane.linkedLayer] ?? new THREE.Color(plane.color).getHex();
+    const group = buildHologram(kind, color);
+    group.scale.setScalar(HOLO_SCALE);
+    group.position.y = HOLO_LIFT;
+    // Make the in-plane hologram very faint so it sits behind nodes.
+    group.traverse(o => {
+        if (o.material) {
+            const apply = (m) => {
+                m.transparent = true;
+                m.opacity = (m.opacity ?? 1) * 0.22;
+                m.depthWrite = false;
+            };
+            if (Array.isArray(o.material)) o.material.forEach(apply);
+            else apply(o.material);
+        }
+    });
+    return group;
 }
-const SV_SEGMENTS = loadSVContour();
 
 // ---------- three.js ----------
 const container = document.getElementById('canvas3d');
@@ -236,21 +243,8 @@ function buildPlane(p) {
     grid.material.opacity = 0.07;
     group.add(grid);
 
-    SV_SEGMENTS.forEach(seg => {
-        const positions = [];
-        for (let i = 0; i < seg.length - 1; i++) {
-            positions.push(seg[i].x, seg[i].y, seg[i].z);
-            positions.push(seg[i+1].x, seg[i+1].y, seg[i+1].z);
-        }
-        const geom = new THREE.BufferGeometry();
-        geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-        const line = new THREE.LineSegments(geom, new THREE.LineBasicMaterial({
-            color: new THREE.Color(p.color),
-            transparent: true,
-            opacity: 0.55
-        }));
-        group.add(line);
-    });
+    const holo = holoForPlane(p);
+    if (holo) group.add(holo);
 
     const label = makeTextSprite(p.label, p.color, 60);
     label.position.set(-PLANE_W/2 - 30, 14, -PLANE_H/2 + 10);

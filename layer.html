@@ -26,10 +26,16 @@
         <div><b>Connect</b> — link two nodes (click each)</div>
         <div><b>Click an edge</b> — edit its label</div>
         <div><b>Shift-click edge</b> — delete it</div>
-        <div><b>Fit</b> — recenter on the contour</div>
+        <div><b>Fit</b> — recenter the view</div>
     </div>
 
     <div id="banner" class="map-banner-strata hidden"></div>
+
+    <!-- Corner hologram for the current layer. -->
+    <div id="corner-holo" class="corner-holo">
+        <div class="ch-canvas" id="ch-canvas"></div>
+        <div class="ch-label" id="ch-label"></div>
+    </div>
 
     <aside id="notes-panel" class="notes-panel hidden">
         <div class="np-header">
@@ -62,13 +68,7 @@
 
     <main class="editor">
         <svg id="canvas">
-            <defs>
-                <path id="sv-shape-bg" d=""/>
-            </defs>
             <g id="viewport">
-                <g id="bg-shape" class="sv-bg-group">
-                    <use href="#sv-shape-bg" class="sv-bg"/>
-                </g>
                 <g id="edges-layer"></g>
                 <g id="nodes-layer"></g>
             </g>
@@ -78,5 +78,25 @@
     <script src="migrate.js"></script>
     <script src="shape.js"></script>
     <script src="editor.js"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
+    <script type="module">
+        import { mountHologram } from './holograms.js';
+        const layerId = (new URLSearchParams(window.location.search)).get('layer') || 'faces';
+        const aliases = { ideas: 'ideology', conditions: 'factory' };
+        const id = aliases[layerId] || layerId;
+        const layer = (window.SV_LAYERS || []).find(l => l.id === id) || window.SV_LAYERS[0];
+        mountHologram(document.getElementById('ch-canvas'), layer.hologram, layer.id, {
+            autoRotate: true,
+            autoRotateSpeed: 0.5
+        });
+        document.getElementById('ch-label').textContent = layer.title;
+    </script>
 </body>
 </html>
