@@ -43,9 +43,19 @@
         if (!raw) return def;
         try {
             var s = JSON.parse(raw);
+            var nodes = Array.isArray(s.nodes) ? s.nodes : [];
+            // Legacy → wiki schema: copy any `description` field onto the
+            // new `detail` field so both the side panel and note.html
+            // read/write the same canonical field.
+            nodes.forEach(function (n) {
+                if (n && n.description != null && n.detail == null) {
+                    n.detail = n.description;
+                    delete n.description;
+                }
+            });
             return {
                 view: s.view || def.view,
-                nodes: Array.isArray(s.nodes) ? s.nodes : [],
+                nodes: nodes,
                 edges: Array.isArray(s.edges) ? s.edges : []
             };
         } catch (e) {
@@ -171,19 +181,58 @@
         g.setAttribute('data-id', n.id);
         g.setAttribute('transform', 'translate(' + n.x + ',' + n.y + ')');
 
-        var c = document.createElementNS(SVG_NS, 'circle');
-        c.setAttribute('class', 'node-dot');
-        c.setAttribute('r', '5');
-        g.appendChild(c);
+        var primary = (n.images && n.images.length) ? n.images[0] : null;
+        if (primary && primary.data) {
+            // Image-as-node-face: render the node's primary picture as a
+            // round avatar instead of the green dot. The frame ring above
+            // it preserves the layer's accent on hover/select.
+            var R = 18;
+            var fo = document.createElementNS(SVG_NS, 'foreignObject');
+            fo.setAttribute('x', -R);
+            fo.setAttribute('y', -R);
+            fo.setAttribute('width', R * 2);
+            fo.setAttribute('height', R * 2);
+            var img = document.createElementNS('http://www.w3.org/1999/xhtml', 'img');
+            img.setAttribute('src', primary.data);
+            img.setAttribute('alt', '');
+            img.style.cssText =
+                'width:' + (R * 2) + 'px;height:' + (R * 2) + 'px;' +
+                'object-fit:cover;border-radius:50%;display:block;pointer-events:none;';
+            fo.appendChild(img);
+            g.appendChild(fo);
+
+            var ring = document.createElementNS(SVG_NS, 'circle');
+            ring.setAttribute('class', 'node-frame');
+            ring.setAttribute('r', R);
+            g.appendChild(ring);
+        } else {
+            var c = document.createElementNS(SVG_NS, 'circle');
+            c.setAttribute('class', 'node-dot');
+            c.setAttribute('r', '5');
+            g.appendChild(c);
+        }
 
         var t = document.createElementNS(SVG_NS, 'text');
         t.setAttribute('class', 'node-label');
-        t.setAttribute('y', '20');
+        t.setAttribute('y', primary ? '34' : '20');
         t.setAttribute('text-anchor', 'middle');
         t.textContent = n.title || 'untitled';
         g.appendChild(t);
 
         nodesLayer.appendChild(g);
+    }
+
+    function rerenderNode(n) {
+        // Drop the existing SVG group and rebuild it — used when something
+        // structural changes (e.g. the node gains or loses its primary
+        // image, switching between dot and image-as-face).
+        var existing = nodesLayer.querySelector('[data-id="' + cssEscape(n.id) + '"]');
+        if (existing) existing.remove();
+        renderNode(n);
+        if (n.id === selectedId) {
+            var fresh = nodesLayer.querySelector('[data-id="' + cssEscape(n.id) + '"]');
+            if (fresh) fresh.classList.add('selected');
+        }
     }
 
     function nodeIdFromTarget(target) {
@@ -284,11 +333,14 @@
         if (title === null) return;
         title = title.trim();
         if (!title) title = 'untitled';
+        var u = (window.SVAuth && window.SVAuth.currentUser) ? window.SVAuth.currentUser() : null;
         var n = {
             id: 'n_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
             x: worldX,
             y: worldY,
-            title: title
+            title: title,
+            createdBy: (u && u.username) || 'anon',
+            createdAt: new Date().toISOString()
         };
         nodes.push(n);
         renderNode(n);
@@ -461,7 +513,11 @@
         if (!n) { hidePanel(); return; }
         panel.classList.remove('hidden');
         npTitle.value = n.title || '';
-        npDesc.value = n.description || '';
+        npDesc.value = n.detail || '';
+        var wikiLink = document.getElementById('np-wiki');
+        if (wikiLink) {
+            wikiLink.href = 'note.html?layer=' + layerId + '&id=' + encodeURIComponent(n.id);
+        }
         renderPanelImages(n);
         renderPanelLinks(n);
     }
@@ -500,6 +556,7 @@
                 n.images.splice(idx, 1);
                 save();
                 renderPanelImages(n);
+                rerenderNode(n);
             });
             wrap.appendChild(rm);
 
@@ -563,7 +620,7 @@
     npDesc.addEventListener('input', function () {
         var n = getSelectedNode();
         if (!n) return;
-        n.description = npDesc.value;
+        n.detail = npDesc.value;
         clearTimeout(descSaveTimer);
         descSaveTimer = setTimeout(save, 400);
     });
@@ -597,6 +654,7 @@
             alert('Storage quota exceeded — export your data and remove some images, or use smaller files.');
         }
         renderPanelImages(n);
+        rerenderNode(n);
     });
 
     document.getElementById('btn-add-link').addEventListener('click', function () {

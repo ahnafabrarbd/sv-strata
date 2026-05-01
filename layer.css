@@ -235,6 +235,37 @@ body.layer-factory  .breadcrumb { color: var(--layer-3); }
 }
 .np-close:hover { color: var(--text); }
 
+.np-wiki {
+    background: transparent;
+    border: 1px solid var(--accent, #2dcc66);
+    color: var(--accent, #2dcc66);
+    font-family: var(--font);
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 5px 9px;
+    text-transform: uppercase;
+    text-decoration: none;
+    margin-left: auto;
+    margin-right: 8px;
+    transition: background 0.15s, color 0.15s;
+}
+.np-wiki:hover {
+    background: var(--accent, #2dcc66);
+    color: #000;
+}
+
+/* Image-as-node-face frame ring (replaces the dot when a node has a
+   primary image attached). */
+.node-frame {
+    fill: none;
+    stroke: var(--accent, #2dcc66);
+    stroke-width: 2;
+    transition: stroke-width 0.1s;
+}
+.node:hover .node-frame { stroke-width: 3; }
+.node.selected .node-frame { stroke: #fff; stroke-width: 3; }
+.node.pending .node-frame { stroke: #fff; stroke-width: 3; }
+
 .np-body {
     flex: 1;
     overflow-y: auto;
