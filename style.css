@@ -1,11 +1,12 @@
 :root {
-    --bg: #050300;
-    --layer-1: #fff5e6;
-    --layer-2: #ff9933;
-    --layer-3: #c1340e;
-    --text: #f5e8d8;
-    --dim: #8B6F4E;
-    --dim-2: #4a3a28;
+    --bg: #03100a;
+    --layer-1: #c8ffd4;   /* faces — palest green */
+    --layer-2: #44ff8c;   /* ideology — neon green */
+    --layer-3: #009947;   /* factory — deep emerald */
+    --text: #e8ffe8;
+    --dim: #4d8060;
+    --dim-2: #1c3a25;
+    --danger: #ff5577;
     --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     --mono: 'Courier New', Courier, monospace;
 }
@@ -74,6 +75,8 @@ header > * { pointer-events: auto; }
     display: block;
 }
 
+/* Legacy SV-outline (still used by the current index.html until the
+   holographic trio replaces it in Phase 2). */
 .sv-outline {
     fill: none;
     stroke-width: 3.2;
@@ -84,16 +87,71 @@ header > * { pointer-events: auto; }
 .layer { cursor: pointer; transition: filter 0.2s; }
 .layer:hover .sv-outline { stroke-width: 4.2; }
 
-.layer-faces .sv-outline      { stroke: var(--layer-1); filter: url(#glow-1); opacity: 0.95; }
-.layer-ideas .sv-outline      { stroke: var(--layer-2); filter: url(#glow-2); opacity: 0.9; }
-.layer-conditions .sv-outline { stroke: var(--layer-3); filter: url(#glow-3); opacity: 0.82; }
+.layer-faces    .sv-outline { stroke: var(--layer-1); filter: url(#glow-1); opacity: 0.95; }
+.layer-ideology .sv-outline { stroke: var(--layer-2); filter: url(#glow-2); opacity: 0.9; }
+.layer-factory  .sv-outline { stroke: var(--layer-3); filter: url(#glow-3); opacity: 0.82; }
 
 .leader { stroke-width: 1; fill: none; }
-.leader-faces      { stroke: var(--layer-1); opacity: 0.55; }
-.leader-ideas      { stroke: var(--layer-2); opacity: 0.55; }
-.leader-conditions { stroke: var(--layer-3); opacity: 0.55; }
+.leader-faces    { stroke: var(--layer-1); opacity: 0.55; }
+.leader-ideology { stroke: var(--layer-2); opacity: 0.55; }
+.leader-factory  { stroke: var(--layer-3); opacity: 0.55; }
 
 .layer-hit { fill: transparent; cursor: pointer; }
+
+/* Holographic icon trio (replaces the SV-outline trio in Phase 2) */
+.holo-trio {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+    pointer-events: none;
+}
+.holo-cell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+}
+.holo-canvas-wrap {
+    width: 320px;
+    height: 320px;
+    position: relative;
+    cursor: grab;
+}
+.holo-canvas-wrap:active { cursor: grabbing; }
+.holo-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
+.holo-cell h2 {
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 4px;
+}
+.holo-cell .subtitle {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-top: 4px;
+}
+.holo-cell .enter {
+    margin-top: 12px;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 2px;
+    color: inherit;
+}
+.holo-cell.faces    h2, .holo-cell.faces    .enter { color: var(--layer-1); }
+.holo-cell.ideology h2, .holo-cell.ideology .enter { color: var(--layer-2); }
+.holo-cell.factory  h2, .holo-cell.factory  .enter { color: var(--layer-3); }
 
 /* Annotations */
 .annotation {
@@ -148,10 +206,10 @@ header > * { pointer-events: auto; }
 
 .layer-faces      .annotation h2,
 .layer-faces      .annotation .enter      { color: var(--layer-1); }
-.layer-ideas      .annotation h2,
-.layer-ideas      .annotation .enter      { color: var(--layer-2); }
-.layer-conditions .annotation h2,
-.layer-conditions .annotation .enter      { color: var(--layer-3); }
+.layer-ideology   .annotation h2,
+.layer-ideology   .annotation .enter      { color: var(--layer-2); }
+.layer-factory    .annotation h2,
+.layer-factory    .annotation .enter      { color: var(--layer-3); }
 
 .foot-note {
     position: fixed;

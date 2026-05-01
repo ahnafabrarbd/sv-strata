@@ -87,19 +87,19 @@
             </g>
             <line class="leader leader-faces" x1="270" y1="170" x2="470" y2="170"/>
 
-            <!-- Layer 2: IDEAS -->
-            <g class="layer layer-ideas" data-enter="ideas" transform="translate(530,110) scale(1.05)">
-                <path class="layer-hit" d="" id="hit-ideas"/>
+            <!-- Layer 2: IDEOLOGY -->
+            <g class="layer layer-ideology" data-enter="ideology" transform="translate(530,110) scale(1.05)">
+                <path class="layer-hit" d="" id="hit-ideology"/>
                 <use href="#sv-shape" class="sv-outline"/>
             </g>
-            <line class="leader leader-ideas" x1="270" y1="395" x2="580" y2="370"/>
+            <line class="leader leader-ideology" x1="270" y1="395" x2="580" y2="370"/>
 
-            <!-- Layer 3: CONDITIONS -->
-            <g class="layer layer-conditions" data-enter="conditions" transform="translate(640,205) scale(1.05)">
-                <path class="layer-hit" d="" id="hit-conditions"/>
+            <!-- Layer 3: FACTORY -->
+            <g class="layer layer-factory" data-enter="factory" transform="translate(640,205) scale(1.05)">
+                <path class="layer-hit" d="" id="hit-factory"/>
                 <use href="#sv-shape" class="sv-outline"/>
             </g>
-            <line class="leader leader-conditions" x1="270" y1="620" x2="690" y2="565"/>
+            <line class="leader leader-factory" x1="270" y1="620" x2="690" y2="565"/>
 
             <!-- Annotations as foreignObject so they share viewBox coords -->
             <foreignObject x="28" y="115" width="260" height="170" class="layer-faces">
@@ -111,27 +111,28 @@
                 </div>
             </foreignObject>
 
-            <foreignObject x="28" y="340" width="260" height="170" class="layer-ideas">
+            <foreignObject x="28" y="340" width="260" height="170" class="layer-ideology">
                 <div xmlns="http://www.w3.org/1999/xhtml" class="annotation">
-                    <h2>IDEAS</h2>
+                    <h2>IDEOLOGY</h2>
                     <div class="subtitle">Middle stratum</div>
-                    <div class="body" contenteditable="true" data-note="ideas"></div>
-                    <a class="enter" href="#" data-enter="ideas">Enter →</a>
+                    <div class="body" contenteditable="true" data-note="ideology"></div>
+                    <a class="enter" href="#" data-enter="ideology">Enter →</a>
                 </div>
             </foreignObject>
 
-            <foreignObject x="28" y="565" width="260" height="180" class="layer-conditions">
+            <foreignObject x="28" y="565" width="260" height="180" class="layer-factory">
                 <div xmlns="http://www.w3.org/1999/xhtml" class="annotation">
-                    <h2>CONDITIONS</h2>
+                    <h2>FACTORY</h2>
                     <div class="subtitle">Mariana stratum</div>
-                    <div class="body" contenteditable="true" data-note="conditions"></div>
-                    <a class="enter" href="#" data-enter="conditions">Enter →</a>
+                    <div class="body" contenteditable="true" data-note="factory"></div>
+                    <a class="enter" href="#" data-enter="factory">Enter →</a>
                 </div>
             </foreignObject>
         </svg>
         <div class="foot-note">silicon valley · three strata · click to descend</div>
     </main>
 
+    <script src="migrate.js"></script>
     <script src="shape.js"></script>
     <script>
         (function () {
@@ -139,7 +140,7 @@
 
             // Inject the SV path into <defs> and into each layer's hit-target.
             document.getElementById('sv-shape').setAttribute('d', SV_PATH);
-            ['faces','ideas','conditions'].forEach(function (id) {
+            ['faces','ideology','factory'].forEach(function (id) {
                 document.getElementById('hit-' + id).setAttribute('d', SV_PATH);
             });
 

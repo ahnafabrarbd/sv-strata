@@ -37,28 +37,28 @@ body {
 
 .sv-bg {
     fill: none;
-    stroke: var(--accent, #ff9933);
+    stroke: var(--accent, #44ff8c);
     stroke-width: 1.5;
     opacity: 0.18;
     pointer-events: none;
 }
 
 /* Per-layer accent: drives node color, sv-bg color, glow color */
-body.layer-faces      { --accent: var(--layer-1); }
-body.layer-ideas      { --accent: var(--layer-2); }
-body.layer-conditions { --accent: var(--layer-3); }
+body.layer-faces    { --accent: var(--layer-1); }
+body.layer-ideology { --accent: var(--layer-2); }
+body.layer-factory  { --accent: var(--layer-3); }
 
-body.layer-faces      .breadcrumb { color: var(--layer-1); }
-body.layer-ideas      .breadcrumb { color: var(--layer-2); }
-body.layer-conditions .breadcrumb { color: var(--layer-3); }
+body.layer-faces    .breadcrumb { color: var(--layer-1); }
+body.layer-ideology .breadcrumb { color: var(--layer-2); }
+body.layer-factory  .breadcrumb { color: var(--layer-3); }
 
 /* Nodes */
 .node { cursor: grab; }
 .node:active { cursor: grabbing; }
 
 .node-dot {
-    fill: var(--accent, #ff9933);
-    stroke: var(--accent, #ff9933);
+    fill: var(--accent, #44ff8c);
+    stroke: var(--accent, #44ff8c);
     stroke-width: 1.5;
     transition: r 0.1s;
 }
@@ -94,7 +94,7 @@ body.layer-conditions .breadcrumb { color: var(--layer-3); }
 .edge { cursor: pointer; }
 
 .edge-line {
-    stroke: var(--accent, #ff9933);
+    stroke: var(--accent, #44ff8c);
     stroke-width: 1.2;
     opacity: 0.55;
     pointer-events: none;
@@ -126,15 +126,15 @@ body.layer-conditions .breadcrumb { color: var(--layer-3); }
 .node.pending .node-dot {
     r: 9;
     fill: #fff;
-    stroke: var(--accent, #ff9933);
+    stroke: var(--accent, #44ff8c);
     stroke-width: 2;
 }
 
 /* Connect-mode toggle on state */
 .actions button.on {
-    background: var(--accent, #ff9933);
+    background: var(--accent, #44ff8c);
     color: #000;
-    border-color: var(--accent, #ff9933);
+    border-color: var(--accent, #44ff8c);
 }
 
 /* Banner (connect-mode hint) */
@@ -145,8 +145,8 @@ body.layer-conditions .breadcrumb { color: var(--layer-3); }
     transform: translateX(-50%);
     z-index: 25;
     background: rgba(8, 4, 0, 0.92);
-    border: 1px solid var(--accent, #ff9933);
-    color: var(--accent, #ff9933);
+    border: 1px solid var(--accent, #44ff8c);
+    color: var(--accent, #44ff8c);
     font-family: var(--font);
     font-size: 10px;
     letter-spacing: 2px;
@@ -170,7 +170,7 @@ body.layer-conditions .breadcrumb { color: var(--layer-3); }
     max-width: 260px;
 }
 .help-card b {
-    color: var(--accent, #ff9933);
+    color: var(--accent, #44ff8c);
     font-weight: 700;
     margin-right: 6px;
 }
@@ -244,7 +244,7 @@ body.layer-conditions .breadcrumb { color: var(--layer-3); }
     box-sizing: border-box;
     line-height: 1.5;
 }
-.np-input:focus, .np-textarea:focus { border-color: var(--accent, #ff9933); }
+.np-input:focus, .np-textarea:focus { border-color: var(--accent, #44ff8c); }
 
 .np-textarea {
     min-height: 120px;
@@ -322,7 +322,7 @@ body.layer-conditions .breadcrumb { color: var(--layer-3); }
 }
 .np-link-label { width: 90px; flex-shrink: 0; }
 .np-link-url { flex: 1; min-width: 0; }
-.np-link-label:focus, .np-link-url:focus { border-color: var(--accent, #ff9933); }
+.np-link-label:focus, .np-link-url:focus { border-color: var(--accent, #44ff8c); }
 .np-link-remove {
     background: transparent;
     border: 1px solid var(--dim-2);
@@ -343,8 +343,8 @@ body.layer-conditions .breadcrumb { color: var(--layer-3); }
 
 .np-delete {
     background: transparent;
-    border: 1px solid #c1340e;
-    color: #c1340e;
+    border: 1px solid var(--danger);
+    color: var(--danger);
     font-family: var(--font);
     font-size: 10px;
     letter-spacing: 2px;
@@ -352,4 +352,4 @@ body.layer-conditions .breadcrumb { color: var(--layer-3); }
     padding: 8px 14px;
     cursor: pointer;
 }
-.np-delete:hover { background: #c1340e; color: #000; }
+.np-delete:hover { background: var(--danger); color: #000; }

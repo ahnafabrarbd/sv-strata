@@ -92,7 +92,7 @@ window.SV_PATH = [
 ].join(" ");
 
 window.SV_LAYERS = [
-    { id: 'faces',      title: 'FACES',      subtitle: 'Surface stratum',     placeholder: 'The front-facing figures of Silicon Valley — founders, personalities, the public face of capital. Click to edit this note.' },
-    { id: 'ideas',      title: 'IDEAS',      subtitle: 'Middle stratum',      placeholder: 'Ideologies and their genealogies. The doctrines that shape what the surface believes. Click to edit this note.' },
-    { id: 'conditions', title: 'CONDITIONS', subtitle: 'Mariana stratum',     placeholder: 'The material conditions — capital flows, supply chains, infrastructure, labor — that let the upper strata exist. Click to edit this note.' }
+    { id: 'faces',    title: 'FACES',    subtitle: 'Surface stratum',  hologram: 'mask',    placeholder: 'The front-facing figures — founders, personalities, the public face of capital. Click to edit this note.' },
+    { id: 'ideology', title: 'IDEOLOGY', subtitle: 'Middle stratum',   hologram: 'network', placeholder: 'The doctrines, axioms, and accepted principles — the lattice of ideas that shapes what the surface believes. Click to edit this note.' },
+    { id: 'factory',  title: 'FACTORY',  subtitle: 'Mariana stratum',  hologram: 'factory', placeholder: 'The material conditions and source code — capital flows, supply chains, infrastructure, labour — that let the upper strata exist. Click to edit this note.' }
 ];

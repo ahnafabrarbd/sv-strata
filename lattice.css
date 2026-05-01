@@ -95,7 +95,7 @@ body.lattice { --accent: var(--layer-2); overflow: hidden; }
     line-height: 1;
     padding: 2px 0;
 }
-.pp-remove:hover { color: #c1340e; border-color: #c1340e; }
+.pp-remove:hover { color: var(--danger); border-color: var(--danger); }
 .pp-hint {
     margin-top: 12px;
     font-size: 9px;
@@ -131,7 +131,7 @@ body.lattice { --accent: var(--layer-2); overflow: hidden; }
     font-size: 11px;
     padding: 4px 6px;
     border: 1px solid var(--dim-2);
-    background: rgba(255, 153, 51, 0.04);
+    background: rgba(68, 255, 140, 0.04);
 }
 .np-edge-target {
     flex: 1;
@@ -171,7 +171,7 @@ body.lattice { --accent: var(--layer-2); overflow: hidden; }
     line-height: 1;
     padding: 0 4px;
 }
-.np-edge-remove:hover { color: #c1340e; }
+.np-edge-remove:hover { color: var(--danger); }
 .np-edges-empty {
     font-size: 10px;
     color: var(--dim-2);
@@ -200,8 +200,8 @@ body.lattice { --accent: var(--layer-2); overflow: hidden; }
     animation: connect-pulse 1.6s ease-in-out infinite;
 }
 @keyframes connect-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 153, 51, 0.45); }
-    50%      { box-shadow: 0 0 0 6px rgba(255, 153, 51, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(68, 255, 140, 0.45); }
+    50%      { box-shadow: 0 0 0 6px rgba(68, 255, 140, 0); }
 }
 
 /* Toolbar lattice link */

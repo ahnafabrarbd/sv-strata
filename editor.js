@@ -4,6 +4,9 @@
     // --- Resolve which layer this page is editing ---
     var params = new URLSearchParams(window.location.search);
     var layerId = params.get('layer') || 'faces';
+    // Back-compat aliases for old bookmarks.
+    var aliases = { ideas: 'ideology', conditions: 'factory' };
+    if (aliases[layerId]) layerId = aliases[layerId];
     var layerMeta = window.SV_LAYERS.find(function (l) { return l.id === layerId; });
     if (!layerMeta) { layerMeta = window.SV_LAYERS[0]; layerId = layerMeta.id; }
 

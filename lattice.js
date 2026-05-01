@@ -21,16 +21,16 @@ const PLANE_H = 720;
 const PLANE_GAP = 360;
 const NODE_R = 7;
 const FREE_NODE_R = 9;
-const FREE_NODE_COLOR = '#f5e8d8';
+const FREE_NODE_COLOR = '#e8ffe8';
 
 const PLANE_PALETTE = ['#a3d977', '#7dd3fc', '#c084fc', '#f472b6', '#fde047', '#22d3ee'];
 
 function defaultState() {
     return {
         planes: [
-            { id: 'plane_faces',      label: 'FACES',      y:  PLANE_GAP, color: '#fff5e6', linkedLayer: 'faces' },
-            { id: 'plane_ideas',      label: 'IDEAS',      y:  0,         color: '#ff9933', linkedLayer: 'ideas' },
-            { id: 'plane_conditions', label: 'CONDITIONS', y: -PLANE_GAP, color: '#c1340e', linkedLayer: 'conditions' }
+            { id: 'plane_faces',    label: 'FACES',    y:  PLANE_GAP, color: '#c8ffd4', linkedLayer: 'faces' },
+            { id: 'plane_ideology', label: 'IDEOLOGY', y:  0,         color: '#44ff8c', linkedLayer: 'ideology' },
+            { id: 'plane_factory',  label: 'FACTORY',  y: -PLANE_GAP, color: '#009947', linkedLayer: 'factory' }
         ],
         nodes: [],
         edges: []
@@ -74,7 +74,7 @@ function nodeAbsoluteY(n) {
 function nodeColor(n) {
     if (isFreeNode(n)) return FREE_NODE_COLOR;
     const plane = state.planes.find(p => p.id === n.planeId);
-    return plane ? plane.color : '#ff9933';
+    return plane ? plane.color : '#44ff8c';
 }
 
 // ---------- SV contour ----------
@@ -103,8 +103,8 @@ const SV_SEGMENTS = loadSVContour();
 // ---------- three.js ----------
 const container = document.getElementById('canvas3d');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050300);
-scene.fog = new THREE.Fog(0x050300, 1100, 3200);
+scene.background = new THREE.Color(0x03100a);
+scene.fog = new THREE.Fog(0x03100a, 1100, 3200);
 
 const camera = new THREE.PerspectiveCamera(
     42,
@@ -140,7 +140,7 @@ scene.add(freeNodesGroup);
         new THREE.Vector3(0,  yMax, 0)
     ]);
     const mat = new THREE.LineDashedMaterial({
-        color: 0xf5e8d8, transparent: true, opacity: 0.18,
+        color: 0xe8ffe8, transparent: true, opacity: 0.18,
         dashSize: 14, gapSize: 18
     });
     const line = new THREE.Line(geom, mat);
@@ -308,7 +308,7 @@ function addNodeMesh(n) {
     mesh.renderOrder = 3;
     parent.add(mesh);
 
-    const sprite = makeTextSprite(n.title || 'untitled', '#f5e8d8', 44);
+    const sprite = makeTextSprite(n.title || 'untitled', '#e8ffe8', 44);
     if (free) {
         sprite.position.set(n.x, nodeAbsoluteY(n) + 18, n.z);
     } else {
@@ -370,7 +370,7 @@ function isCrossPlaneEdge(e) {
 
 function makeEdgeLabelSprite(label, isCross) {
     const text = (label && label.trim()) ? label : '+';
-    const color = isCross ? '#f5e8d8' : '#1a1208';
+    const color = isCross ? '#e8ffe8' : '#0a1a10';
     const bg = isCross ? 'rgba(8,4,0,0.85)' : 'rgba(255,153,51,0.92)';
     const sprite = makeTextSprite(text, color, 38, { bg: bg });
     sprite.scale.set(110, 28, 1);
@@ -962,7 +962,7 @@ function renderLinks(n) {
 function updateNodeLabelSprite(n) {
     const rec = nodeRecords.get(n.id);
     if (!rec) return;
-    const newSprite = makeTextSprite(n.title || 'untitled', '#f5e8d8', 44);
+    const newSprite = makeTextSprite(n.title || 'untitled', '#e8ffe8', 44);
     newSprite.position.copy(rec.sprite.position);
     newSprite.scale.copy(rec.sprite.scale);
     const parent = rec.sprite.parent;
