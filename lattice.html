@@ -71,11 +71,17 @@
             <button class="np-close" id="btn-np-close" title="Close">×</button>
         </div>
         <div class="np-body">
-            <label class="np-label">Title</label>
-            <input class="np-input" id="np-title" placeholder="Untitled" type="text">
+            <input class="np-title-input" id="np-title" placeholder="Untitled" type="text">
+            <div class="np-byline" id="np-byline"></div>
 
-            <label class="np-label">Description</label>
-            <textarea class="np-textarea" id="np-description" placeholder="Notes, essay, ideology, quote, citation…"></textarea>
+            <label class="np-label">Genealogy</label>
+            <textarea class="np-textarea" id="np-genealogy" placeholder="Lineage, predecessors, sources of influence…"></textarea>
+
+            <label class="np-label">History · Biography</label>
+            <textarea class="np-textarea" id="np-history" placeholder="Background, key events, story…"></textarea>
+
+            <label class="np-label">Detail</label>
+            <textarea class="np-textarea" id="np-detail" placeholder="Notes, essay, ideology, quote, citation…"></textarea>
 
             <label class="np-label">Plane</label>
             <select class="np-input np-select" id="np-plane"></select>
@@ -91,9 +97,23 @@
             <label class="np-label">Connections</label>
             <div id="np-edges" class="np-edges"></div>
 
-            <label class="np-label">Links</label>
+            <label class="np-label">Pictures</label>
+            <div class="np-images" id="np-images"></div>
+            <label class="np-add-image">
+                + Add image
+                <input type="file" id="np-image-input" accept="image/*" multiple hidden>
+            </label>
+
+            <label class="np-label">Bibliography</label>
             <div class="np-links" id="np-links"></div>
-            <button class="np-add-link" id="btn-add-link">+ Add link</button>
+            <button class="np-add-link" id="btn-add-link" type="button">+ Add reference</button>
+
+            <label class="np-label">Comments</label>
+            <div class="np-comments" id="np-comments"></div>
+            <form class="np-comment-form" id="np-comment-form">
+                <textarea id="np-comment-input" placeholder="Add a comment…" rows="2" required></textarea>
+                <button type="submit" class="np-comment-submit">Post</button>
+            </form>
 
             <div class="np-footer">
                 <button class="np-delete" id="btn-np-delete">Delete node</button>

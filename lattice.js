@@ -620,6 +620,16 @@ function pickAt(clientX, clientY) {
     return null;
 }
 
+// Camera-facing plane through a given world point — used to drag free
+// Z-nodes in full 3D. Without this they'd be locked to a horizontal
+// plane at their current Y, which makes vertical dragging impossible.
+function intersectCameraPlaneAt(pos) {
+    const normal = new THREE.Vector3().subVectors(camera.position, pos).normalize();
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, pos);
+    const out = new THREE.Vector3();
+    return raycaster.ray.intersectPlane(plane, out) ? out : null;
+}
+
 function intersectPlaneY(planeY) {
     const ray = raycaster.ray;
     if (Math.abs(ray.direction.y) < 1e-6) return null;
@@ -668,11 +678,25 @@ renderer.domElement.addEventListener('pointermove', e => {
     if (dragging.type !== 'node') return;
     const node = state.nodes.find(n => n.id === dragging.nodeId);
     if (!node) return;
-    const targetY = nodeAbsoluteY(node);
-    const point = intersectPlaneY(targetY);
-    if (!point) return;
-    node.x = point.x;
-    node.z = point.z;
+
+    if (isFreeNode(node)) {
+        // Free Z-nodes: drag in full 3D through a camera-aligned plane
+        // at the node's current position. Vertical mouse motion translates
+        // mostly to world Y, horizontal to world X/Z.
+        const here = new THREE.Vector3(node.x, (typeof node.y === 'number') ? node.y : 0, node.z);
+        const point = intersectCameraPlaneAt(here);
+        if (!point) return;
+        node.x = point.x;
+        node.y = point.y;
+        node.z = point.z;
+    } else {
+        // Plane-bound nodes: stay on their plane (Y locked by the plane).
+        const targetY = nodeAbsoluteY(node);
+        const point = intersectPlaneY(targetY);
+        if (!point) return;
+        node.x = point.x;
+        node.z = point.z;
+    }
     setNodeMeshPosition(node);
     state.edges.forEach(eg => {
         if (eg.fromId === node.id || eg.toId === node.id) updateEdgeGeometry(eg);
@@ -768,8 +792,14 @@ renderer.domElement.addEventListener('pointerup', e => {
             x: pick.point.x,
             z: pick.point.z,
             title: trimmed,
-            description: '',
-            links: []
+            detail: '',
+            genealogy: '',
+            history: '',
+            images: [],
+            links: [],
+            comments: [],
+            createdBy: ((window.SVAuth && window.SVAuth.currentUser && window.SVAuth.currentUser()) || {}).username || 'anon',
+            createdAt: new Date().toISOString()
         };
         state.nodes.push(node);
         addNodeMesh(node);
@@ -905,15 +935,48 @@ function refreshSelectionVisuals() {
 // ---------- selection / panel ----------
 const panel = document.getElementById('notes-panel');
 const npTitle = document.getElementById('np-title');
-const npDesc = document.getElementById('np-description');
+const npByline = document.getElementById('np-byline');
+const npGenealogy = document.getElementById('np-genealogy');
+const npHistory = document.getElementById('np-history');
+const npDetail = document.getElementById('np-detail');
 const npPlane = document.getElementById('np-plane');
 const npYRow = document.getElementById('np-y-row');
 const npY = document.getElementById('np-y');
 const npSource = document.getElementById('np-source');
 const npLinks = document.getElementById('np-links');
 const npEdges = document.getElementById('np-edges');
+const npImages = document.getElementById('np-images');
+const npImageInput = document.getElementById('np-image-input');
+const npComments = document.getElementById('np-comments');
+const npCommentInput = document.getElementById('np-comment-input');
+const npCommentForm = document.getElementById('np-comment-form');
 
 const FREE_OPTION = '__free__';
+
+function escapeHtml(s) {
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Backfill the wiki schema onto a lattice node — same shape as the layer
+// nodes so the two contexts share one source of truth.
+function ensureWikiFields(n) {
+    if (!n) return n;
+    if (n.genealogy == null) n.genealogy = '';
+    if (n.history   == null) n.history   = '';
+    if (n.detail    == null) n.detail    = n.description != null ? n.description : '';
+    if (!Array.isArray(n.images))   n.images   = [];
+    if (!Array.isArray(n.links))    n.links    = [];
+    if (!Array.isArray(n.comments)) n.comments = [];
+    if (!n.createdBy) {
+        const u = (window.SVAuth && window.SVAuth.currentUser) ? window.SVAuth.currentUser() : null;
+        n.createdBy = (u && u.username) || 'unknown';
+    }
+    if (!n.createdAt) n.createdAt = new Date().toISOString();
+    if (n.description != null) delete n.description;
+    if (n.special != null) delete n.special;
+    return n;
+}
 
 function selectNode(id) {
     selectedId = id;
@@ -922,17 +985,31 @@ function selectNode(id) {
     else hidePanel();
 }
 
+function renderByline(n) {
+    const dt = new Date(n.createdAt);
+    const stamp = isNaN(dt.getTime()) ? '' : dt.toISOString().slice(0, 10);
+    npByline.innerHTML =
+        'by <span class="np-byline-user">@' + escapeHtml(n.createdBy) + '</span>' +
+        (stamp ? ' · created ' + stamp : '');
+}
+
 function showPanel(id) {
     const n = state.nodes.find(x => x.id === id);
     if (!n) { hidePanel(); return; }
+    ensureWikiFields(n);
     panel.classList.remove('hidden');
-    npTitle.value = n.title || '';
-    npDesc.value = n.description || '';
+    npTitle.value     = n.title     || '';
+    npGenealogy.value = n.genealogy || '';
+    npHistory.value   = n.history   || '';
+    npDetail.value    = n.detail    || '';
+    renderByline(n);
     populatePlaneSelect(n);
     syncYRow(n);
     renderSource(n);
     renderEdgesPanel(n);
     renderLinks(n);
+    renderImages(n);
+    renderComments(n);
 }
 
 function hidePanel() {
@@ -1105,16 +1182,174 @@ npTitle.addEventListener('blur', () => {
     save();
 });
 
-let descTimer = null;
-npDesc.addEventListener('input', () => {
+// Generalised wiki-field binder — debounced save while typing, commit
+// on blur. Same idiom as editor.js so the two contexts mirror.
+function bindWikiField(el, field) {
+    let t = null;
+    el.addEventListener('input', () => {
+        if (!selectedId) return;
+        const n = state.nodes.find(x => x.id === selectedId);
+        if (!n) return;
+        n[field] = el.value;
+        clearTimeout(t);
+        t = setTimeout(save, 400);
+    });
+    el.addEventListener('blur', () => { clearTimeout(t); save(); });
+}
+bindWikiField(npGenealogy, 'genealogy');
+bindWikiField(npHistory,   'history');
+bindWikiField(npDetail,    'detail');
+
+// ---------- pictures ----------
+function renderImages(n) {
+    npImages.innerHTML = '';
+    (n.images || []).forEach((img, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'np-image-thumb' + (idx === 0 ? ' primary' : '');
+        const image = document.createElement('img');
+        image.src = img.data;
+        image.alt = img.name || '';
+        wrap.appendChild(image);
+
+        if (idx === 0) {
+            const tag = document.createElement('span');
+            tag.className = 'np-image-thumb-primary-tag';
+            tag.textContent = 'FACE';
+            wrap.appendChild(tag);
+        } else {
+            const promote = document.createElement('button');
+            promote.className = 'np-image-thumb-promote';
+            promote.type = 'button';
+            promote.textContent = 'Make face';
+            promote.title = 'Use as primary image';
+            promote.addEventListener('click', () => {
+                const moved = n.images.splice(idx, 1)[0];
+                n.images.unshift(moved);
+                save();
+                renderImages(n);
+            });
+            wrap.appendChild(promote);
+        }
+
+        const rm = document.createElement('button');
+        rm.className = 'np-image-remove';
+        rm.type = 'button';
+        rm.textContent = '×';
+        rm.title = 'Remove image';
+        rm.addEventListener('click', () => {
+            n.images.splice(idx, 1);
+            save();
+            renderImages(n);
+        });
+        wrap.appendChild(rm);
+
+        npImages.appendChild(wrap);
+    });
+}
+
+function processImage(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+                const maxDim = 1000;
+                let w = img.width, h = img.height;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                    else       { w = Math.round(w * maxDim / h); h = maxDim; }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            };
+            img.onerror = reject;
+            img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+npImageInput.addEventListener('change', async (e) => {
     if (!selectedId) return;
     const n = state.nodes.find(x => x.id === selectedId);
     if (!n) return;
-    n.description = npDesc.value;
-    clearTimeout(descTimer);
-    descTimer = setTimeout(save, 400);
+    if (!Array.isArray(n.images)) n.images = [];
+    const files = Array.from(e.target.files);
+    e.target.value = '';
+    for (const file of files) {
+        try {
+            const data = await processImage(file);
+            n.images.push({ name: file.name, data });
+        } catch (err) {
+            alert('Failed to process image "' + file.name + '": ' + err.message);
+        }
+    }
+    try { save(); }
+    catch (err) {
+        n.images.splice(n.images.length - files.length, files.length);
+        alert('Storage quota exceeded — remove images or use smaller files.');
+    }
+    renderImages(n);
 });
-npDesc.addEventListener('blur', () => { clearTimeout(descTimer); save(); });
+
+// ---------- comments ----------
+function renderComments(n) {
+    npComments.innerHTML = '';
+    const items = n.comments || [];
+    if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'np-comments-empty';
+        empty.textContent = 'No comments yet.';
+        npComments.appendChild(empty);
+        return;
+    }
+    items.slice().reverse().forEach(c => {
+        const wrap = document.createElement('div');
+        wrap.className = 'np-comment';
+
+        const head = document.createElement('div');
+        head.className = 'np-comment-head';
+        const user = document.createElement('span');
+        user.className = 'np-comment-user';
+        user.textContent = '@' + (c.author || 'anon');
+        const stamp = document.createElement('span');
+        stamp.className = 'np-comment-stamp';
+        const dt = new Date(c.createdAt);
+        stamp.textContent = isNaN(dt.getTime()) ? '' : dt.toLocaleString();
+        head.appendChild(user);
+        head.appendChild(stamp);
+
+        const body = document.createElement('div');
+        body.className = 'np-comment-body';
+        body.textContent = c.text;
+
+        wrap.appendChild(head);
+        wrap.appendChild(body);
+        npComments.appendChild(wrap);
+    });
+}
+
+npCommentForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!selectedId) return;
+    const n = state.nodes.find(x => x.id === selectedId);
+    if (!n) return;
+    const text = (npCommentInput.value || '').trim();
+    if (!text) return;
+    const u = (window.SVAuth && window.SVAuth.currentUser) ? window.SVAuth.currentUser() : null;
+    if (!Array.isArray(n.comments)) n.comments = [];
+    n.comments.push({
+        author: (u && u.username) || 'anon',
+        text,
+        createdAt: new Date().toISOString()
+    });
+    save();
+    npCommentInput.value = '';
+    renderComments(n);
+});
 
 npPlane.addEventListener('change', () => {
     if (!selectedId) return;
@@ -1253,6 +1488,7 @@ document.getElementById('btn-add-plane').addEventListener('click', () => {
     });
     save();
     rebuild();
+    reheat();
 });
 
 document.getElementById('btn-add-znode').addEventListener('click', () => {
@@ -1274,8 +1510,14 @@ document.getElementById('btn-add-znode').addEventListener('click', () => {
         y: yMid + jitter,
         z: jitter,
         title: trimmed,
-        description: '',
-        links: []
+        detail: '',
+        genealogy: '',
+        history: '',
+        images: [],
+        links: [],
+        comments: [],
+        createdBy: ((window.SVAuth && window.SVAuth.currentUser && window.SVAuth.currentUser()) || {}).username || 'anon',
+        createdAt: new Date().toISOString()
     };
     state.nodes.push(node);
     addNodeMesh(node);
@@ -1329,16 +1571,28 @@ function importLayerInto(plane) {
     sourceNodes.forEach(sn => {
         const x = sn.x - 270;
         const z = sn.y - 270;
+        // Layer and lattice now share the same wiki schema, so we can
+        // mirror every wiki field across — `detail` is the canonical
+        // free-form text, with a fallback to the legacy `description`
+        // for any node that hasn't been touched since the schema flip.
+        const detail = sn.detail !== undefined ? sn.detail : (sn.description || '');
         if (idMap[sn.id]) {
             const existing = state.nodes.find(n => n.id === idMap[sn.id]);
             if (!existing) return;
-            existing.title = sn.title || existing.title;
-            existing.description = sn.description !== undefined ? sn.description : existing.description;
-            existing.links = sn.links || existing.links;
+            existing.title     = sn.title     || existing.title;
+            existing.detail    = detail;
+            existing.genealogy = sn.genealogy || existing.genealogy || '';
+            existing.history   = sn.history   || existing.history   || '';
+            existing.images    = sn.images    || existing.images    || [];
+            existing.links     = sn.links     || existing.links     || [];
+            existing.comments  = sn.comments  || existing.comments  || [];
+            existing.createdBy = sn.createdBy || existing.createdBy;
+            existing.createdAt = sn.createdAt || existing.createdAt;
             existing.x = x;
             existing.z = z;
             existing.planeId = plane.id;
             delete existing.y;
+            delete existing.description;
             updated++;
         } else {
             const newId = 'n_' + Date.now() + '_' + Math.floor(Math.random() * 100000) + '_' + sn.id;
@@ -1346,9 +1600,15 @@ function importLayerInto(plane) {
                 id: newId,
                 planeId: plane.id,
                 x, z,
-                title: sn.title || 'untitled',
-                description: sn.description || '',
-                links: sn.links || [],
+                title:     sn.title     || 'untitled',
+                detail,
+                genealogy: sn.genealogy || '',
+                history:   sn.history   || '',
+                images:    sn.images    || [],
+                links:     sn.links     || [],
+                comments:  sn.comments  || [],
+                createdBy: sn.createdBy || 'unknown',
+                createdAt: sn.createdAt || new Date().toISOString(),
                 sourceLayer: plane.linkedLayer,
                 sourceNodeId: sn.id
             });
@@ -1482,6 +1742,24 @@ window.addEventListener('resize', () => {
 });
 
 // ---------- loop ----------
+// Cross-tab sync: if another tab writes the same lattice key, the
+// browser fires a `storage` event here. We re-load the state in place,
+// rebuild the scene, and (if a node is selected) refresh the panel so
+// new comments / edits surface immediately.
+window.addEventListener('storage', (e) => {
+    if (e.key !== STORAGE_KEY) return;
+    const fresh = loadState();
+    state.planes = fresh.planes;
+    state.nodes = fresh.nodes;
+    state.edges = fresh.edges;
+    rebuild();
+    if (selectedId) {
+        const stillThere = state.nodes.find(n => n.id === selectedId);
+        if (stillThere) showPanel(selectedId);
+        else { selectedId = null; hidePanel(); }
+    }
+});
+
 function tick() {
     controls.update();
     if (connectMode && pendingFromId) updateGuideLine();
